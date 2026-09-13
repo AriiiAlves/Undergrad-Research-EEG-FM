@@ -1,2 +1,0 @@
-# Como usar esse modelo
-

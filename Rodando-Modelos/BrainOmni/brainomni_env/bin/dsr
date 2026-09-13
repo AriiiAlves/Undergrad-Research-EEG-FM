@@ -1,6 +1,0 @@
-#!/home/arielalves/Área de trabalho/Iniciacao-cientifica-EEG-FM/Models/BrainOmni/brainomni_env/bin/python3.12
-
-from deepspeed.env_report import cli_main
-
-if __name__ == '__main__':
-    cli_main()
