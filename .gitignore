@@ -1,1 +1,6 @@
 paracrawl*
+.venv/
+data/
+__pycache__/
+.brainomni-venv/
+.vscode/
