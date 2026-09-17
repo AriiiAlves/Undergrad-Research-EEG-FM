@@ -1,0 +1,10 @@
+137 Bad Channels (Auto): ['AF7', 'PO7', 'C4', 'Fp1']
+139 Bad Channels (Auto): ['FT7', 'AF8', 'Fp2', 'Fp1', 'Fpz', 'AF4', 'AF7']
+122 Bad Channels (Auto): ['Fp2', 'Fpz', 'P7']
+125 Bad Channels (Auto): ['C4', 'AF8', 'Fp2', 'Fp1', 'Fpz', 'AF4', 'FC3', 'FC4']
+
+137 Bad Channels (pyprep): ['C4', 'PO4', 'F6']
+108 Bad Channels (pyprep): ['Pz', 'FC2']
+139 Bad Channels (pyprep): ['Fp1', 'Fz', 'AF8', 'Fp2', 'F6', 'FT7', 'Fpz', 'Iz', 'F8']
+122 Bad Channels (pyprep): ['Fp1', 'FC5', 'AF8', 'Fp2', 'Fpz']
+125 Bad Channels (pyprep): ['FC5', 'F5', 'C4', 'FT7', 'C3', 'FC3', 'T7', 'C5']
