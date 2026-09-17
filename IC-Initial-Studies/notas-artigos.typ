@@ -96,7 +96,7 @@ A explicação matemática para a definição da Transformada de Fourier está p
 Fotopletismografia (oxímetro): sensível a pequenas variações de luz externa, causando tendência global decrescente e artefato (queda brusca) ao final.
 
 #figure(
-  image("./imagens-notas-artigos/image.png", width: 80%),
+  image("./images/image.png", width: 80%),
 )
 
 Podemos separar a série temporal em componentes com `numpy, statsmodel` 
@@ -117,7 +117,7 @@ plt.show()
 ```
 
 #figure(
-  image("./imagens-notas-artigos/image(1).png", width: 80%),
+  image("./images/image(1).png", width: 80%),
 )
 
 Removendo a tendência:
@@ -133,7 +133,7 @@ plt.plot()
 ```
 
 #figure(
-  image("./imagens-notas-artigos/image(2).png", width: 70%),
+  image("./images/image(2).png", width: 70%),
 )
 
 === Interpolação
@@ -141,7 +141,7 @@ plt.plot()
 Para amostragem irregular e valores ausentes. Complementamos valores faltantes com interpolação linear, polinomial, spline (polinômios por parte). Usa-se pandas.
 
 #figure(
-  image("./imagens-notas-artigos/image(3).png", width: 50%),
+  image("./images/image(3).png", width: 50%),
 )
 
 === Filtragem
@@ -177,7 +177,7 @@ Usar distância euclidiana pode falhar em caso de shift no eixo do tempo da sér
 - Longest Common Subsequence (LCSS)
 
 #figure(
-  image("./imagens-notas-artigos/image(4).png", width: 100%),
+  image("./images/image(4).png", width: 100%),
 )
 
 Para construir um modelo que não use medidas de distância/similaridade, pode-se usar o algoritmo *k-NN (k-Nearest Neighbors)*. Ele funciona sob a premissa de que “instâncias com características semelhantes tendem a ter resultados semelhantes”;
@@ -215,7 +215,7 @@ Algoritmo de aprendizado de máquina utilizado para resolver problemas de classi
 *Ramos*: Respostas possíveis (sim/não, maior/menor) que conectam os nós
 
 #figure(
-  image("./imagens-notas-artigos/image(5).png", width: 80%),
+  image("./images/image(5).png", width: 80%),
 )
 
 O algoritmo usa critérios estatísticos para melhor dividir os dados (Entropia ou Gini) e divide até atingir grupos homogêneos.
@@ -252,7 +252,7 @@ Medida de distância do algoritmo (note que apenas as palavras não ausentas na 
 $ "dist"(B_1,B_2)=sum_(w in B_1|B_1(w)>0)[B_1(w)-B_2(w)]^2 $
 
 #figure(
-  image("./imagens-notas-artigos/image(6).png", width: 100%),
+  image("./images/image(6).png", width: 100%),
 )
 
 === Deep Learning
@@ -260,7 +260,7 @@ $ "dist"(B_1,B_2)=sum_(w in B_1|B_1(w)>0)[B_1(w)-B_2(w)]^2 $
 Ultrapassa o desempenho de outros algoritmos mais clássicos. Baseado nas sinapses humanas: camadas de funções conectadas que processam o sinal individualmente.
 
 #figure(
-  image("./imagens-notas-artigos/image(7).png", width: 100%),
+  image("./images/image(7).png", width: 100%),
 )
 
 Treina-se com dados rotulados. A rede aprende as relações importantes nos dados (no brute force). Necessário grande volumes de dados, um fator limitante para seu uso.
@@ -307,7 +307,7 @@ print(accuracy_score(y_test, y_pred))
 A figura abaixo é a matriz de confusão para o algoritmo KNN No cunjunto de dados. É uma tabela usada para medir o desempenho de um modelo de classificação. Ela mostra onde o modelo acertou e, principalmente, com o que ele se *confundiu*.
 
 #figure(
-  image("./imagens-notas-artigos/image(8).png", width: 100%),
+  image("./images/image(8).png", width: 100%),
 )
 
 Como ocorre um desbalanceamento de classes neste conjunto, onde a maioria das classes são pertencentes aos rótulos 1 e 2, as outras classes que possuem poucos exemplos concentram grande parte dos erros do algoritmo
@@ -510,7 +510,7 @@ $ f_theta : X → Z $
   Representação matemática comprimida, de menor dimensão e abstrata (vetores) de dados complexos onde o modelo entende o significado e o contexto dos dados.
 
   #figure(
-    image("./imagens-notas-artigos/image(9).png", width: 80%),
+    image("./images/image(9).png", width: 80%),
   )
 
   Permite à IA generativa entender, manipular e criar novo conteúdo.
