@@ -6,17 +6,8 @@ import numpy as np
 
 if __name__ == "__main__":
     # --------------------------------------------------------
-    ## Define dataset
-    #BEGIN_SUBJECT = 104
-    #END_SUBJECT = 110
-    #subjects = [str(x) for x in range(BEGIN_SUBJECT,END_SUBJECT+1)]
-    #subjects = ["108","110","112"]
-    #dataset = DS006576(cache_dir="./data", subject=subjects) # Preload = True downloads the entire dataset.
-    #dataset = DS006576(cache_dir="./data") # Preload = True downloads the entire dataset.
     dataset = EEGDashDataset(cache_dir="./data", dataset='ds006866')
     # --------------------------------------------------------
-
-    #dataset = EEGDashDataset(cache_dir="./data", dataset='ds004019')
 
     # Custom function: rename EEG channels
     def channels_treatment(raw):
@@ -70,21 +61,21 @@ if __name__ == "__main__":
 
         return raw
 
-    batch_preprocess_dataset(
-        dataset = dataset, 
-        output_dir = "DS006866", 
-        channels_treatment = channels_treatment,
-        l_freq = 1,
-        h_freq = 40,
-        down_freq = 200,
-        bad_ch_tolerance = 0.15,
-        ransac = True,
-        ica = True,
-        window_size=512,
-        n_jobs=2,
-        ref_channels=['M1', 'M2'],
-        overwrite=False
-    )
+    # batch_preprocess_dataset(
+    #     dataset = dataset, 
+    #     output_dir = "DS006866", 
+    #     channels_treatment = channels_treatment,
+    #     l_freq = 1,
+    #     h_freq = 40,
+    #     down_freq = 200,
+    #     bad_ch_tolerance = 0.15,
+    #     ransac = True,
+    #     ica = True,
+    #     window_size=512,
+    #     n_jobs=2,
+    #     ref_channels=['M1', 'M2'],
+    #     overwrite=False
+    # )
 
     base_windows_path = "/home/arielalves/Undergrad-Research-EEG-FM/Full-Preprocessing-Umap/DS006866/pre-processed-eeg" #(New)
     #base_windows_path = "/home/arielalves/Undergrad-Research-EEG-FM/Full-Preprocessing-Umap/DS006576/pre-processed-eeg" #(OK)

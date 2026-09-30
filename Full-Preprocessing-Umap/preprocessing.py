@@ -164,11 +164,7 @@ def process_single_subject(record, output_dir, channels_treatment, l_freq, h_fre
     """
     sub_id = record.description.get('subject', 'unknown')
 
-    subject_path = Path(output_dir) / "pre-processed-eeg" / f"sub-{sub_id}"
-    if(subject_path.exists() and not overwrite): 
-        print(f"[Single Subject Preprocessing] Skipping {sub_id}: already processed")
-        return True
-
+    subject_path = Path(output_dir) / "pre-processed-eeg"
     subject_path.mkdir(parents=True, exist_ok=True)
 
     # Var initializing (if subject got dropped, assure the variables to be deleted exist)
@@ -249,7 +245,7 @@ def process_single_subject(record, output_dir, channels_treatment, l_freq, h_fre
             preload=True
         )
 
-        windows.save(str(subject_path), overwrite=True)
+        windows.save(str(subject_path), overwrite=overwrite)
 
         return True
 
@@ -291,9 +287,5 @@ def batch_preprocess_dataset(dataset, output_dir, channels_treatment, l_freq=1, 
         )
         for record in dataset.datasets
     )
-    
-    # FOR TEST 
-    # process_single_subject(dataset.datasets[0], output_dir, channels_treatment, l_freq, h_freq, down_freq, 
-    #         bad_ch_tolerance, ransac, ica, window_size)
 
     print(f"Finished Processing. Succesfully processed subjects: {sum(results)}/{len(dataset.datasets)}")
