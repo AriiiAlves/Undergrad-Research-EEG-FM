@@ -40,19 +40,13 @@ def get_brainomni(ckpt_path) -> BrainOmni:
         p.requires_grad = False
     return model
 
-def gen_avg_latent_space(windows_path, z_score = False) -> str:
+def gen_avg_latent_space(loaded_windows, limit, z_score = False) -> str:
     LATENT_SPACE_FILE = ""
     if(z_score): LATENT_SPACE_FILE = "latent_space_avg_with_z_score.pt"
     else: LATENT_SPACE_FILE = "latent_space_avg_without_z_score.pt"
 
     file_path = Path(f"{LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}")
     if file_path.exists(): return file_path
-    
-    # O diretório onde você salvou as janelas (ex: OUTPUT_DIR = "./pre-processed-pyprep-eeg")
-    loaded_windows = load_concat_dataset(
-        path=windows_path,
-        preload=False  # load by demand (lazy loading), saves RAM
-    )
 
     # 2. Configurar o dispositivo e carregar o BrainOmni pré-treinado
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -64,6 +58,7 @@ def gen_avg_latent_space(windows_path, z_score = False) -> str:
 
     with torch.no_grad():
         for dataset_idx, window_ds in enumerate(loaded_windows.datasets):
+            if(dataset_idx >= limit and limit != 0): break 
             # Pega o ch_pos original [64, 3], adiciona o batch -> [1, 64, 3]
             pos_3d = torch.tensor(window_ds.ch_pos, dtype=torch.float32).unsqueeze(0).to(device)
             # Cria um tensor de zeros para as 3 dimensões faltantes [1, 64, 3] e concatena na última dimensão (dim=-1)
@@ -103,19 +98,13 @@ def gen_avg_latent_space(windows_path, z_score = False) -> str:
 
     return file_path
 
-def gen_window_latent_space(windows_path, z_score = False) -> str:
+def gen_window_latent_space(loaded_windows, limit, z_score = False) -> str:
     LATENT_SPACE_FILE = ""
     if(z_score): LATENT_SPACE_FILE = "latent_space_full_windows_with_z_score.pt"
     else: LATENT_SPACE_FILE = "latent_space_full_windows_without_z_score.pt"
 
     file_path = Path(f"{LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}")
     if file_path.exists(): return file_path
-
-    # O diretório onde você salvou as janelas (ex: OUTPUT_DIR = "./pre-processed-pyprep-eeg")
-    loaded_windows = load_concat_dataset(
-        path=windows_path,
-        preload=False  # load by demand (lazy loading), saves RAM
-    )
 
     # 2. Configurar o dispositivo e carregar o BrainOmni pré-treinado
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -127,6 +116,7 @@ def gen_window_latent_space(windows_path, z_score = False) -> str:
 
     with torch.no_grad():
         for dataset_idx, window_ds in enumerate(loaded_windows.datasets):
+            if(dataset_idx >= limit and limit != 0): break 
             pos_3d = torch.tensor(window_ds.ch_pos, dtype=torch.float32).unsqueeze(0).to(device)
             pos = torch.cat([pos_3d, torch.zeros_like(pos_3d)], dim=-1)
             
@@ -157,7 +147,7 @@ def gen_window_latent_space(windows_path, z_score = False) -> str:
 
     return f"{LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}"
 
-def gen_umap(windows_path, option):
+def gen_umap(windows_path, option, limit=0):
     windows_path = Path(windows_path)
 
     os.makedirs(LATENT_SPACE_DIR, exist_ok=True) # Ensure that the folder already exists
@@ -169,44 +159,54 @@ def gen_umap(windows_path, option):
 
     latent_space_file = ""
 
+    # O diretório onde você salvou as janelas (ex: OUTPUT_DIR = "./pre-processed-pyprep-eeg")
+    loaded_windows = load_concat_dataset(
+        path=windows_path,
+        preload=False  # load by demand (lazy loading), saves RAM
+    )
+
     if(option == "avg_with_z_score"):
-        latent_space_file = gen_avg_latent_space(windows_path, z_score=True)
+        latent_space_file = gen_avg_latent_space(loaded_windows, limit, z_score=True)
     elif(option == "avg_without_z_score"):
-        latent_space_file = gen_avg_latent_space(windows_path, z_score=False)
+        latent_space_file = gen_avg_latent_space(loaded_windows, limit, z_score=False)
     elif(option == "windows_with_z_score"):
-        latent_space_file = gen_window_latent_space(windows_path, z_score=True)
+        latent_space_file = gen_window_latent_space(loaded_windows, limit, z_score=True)
     elif(option == "windows_without_z_score"):
-        latent_space_file = gen_window_latent_space(windows_path, z_score=False)
+        latent_space_file = gen_window_latent_space(loaded_windows, limit, z_score=False)
     
     final_features = torch.load(latent_space_file)
 
-    # 1. Configurar e rodar o UMAP na matriz de características dos indivíduos
-    # (Certifique-se de que final_features é um array numpy com shape [N_indivíduos, Dimensão_Latente])
-    reducer = umap.UMAP(
-        n_neighbors=min(5, len(final_features) - 1), # Ajuste o n_neighbors se tiver poucos sujeitos
-        min_dist=0.1, 
-        metric='cosine', 
-        random_state=42
-    )
-    embedding = reducer.fit_transform(final_features)
+    # Obter labels
+    labels = loaded_windows.description.fillna("N/A").to_dict('list')
 
-    # 2. Plotar o gráfico 2D do UMAPs
-    fig = plt.figure(figsize=(8, 6))
-    sns.scatterplot(
-        x=embedding[:, 0], 
-        y=embedding[:, 1],
-        # hue=subject_labels, # Opcional: passe uma lista com os rótulos/classes dos sujeitos se tiver
-        palette='viridis',
-        s=100,
-        alpha=0.8
-    )
+    for label_type, subject_labels in labels.items():
+        # 1. Configurar e rodar o UMAP na matriz de características dos indivíduos
+        # (Certifique-se de que final_features é um array numpy com shape [N_indivíduos, Dimensão_Latente])
+        reducer = umap.UMAP(
+            n_neighbors=min(5, len(final_features) - 1), # Ajuste o n_neighbors se tiver poucos sujeitos
+            min_dist=0.1, 
+            metric='cosine', 
+            random_state=42
+        )
+        embedding = reducer.fit_transform(final_features)
 
-    title = str(latent_space_file).split(".")[0].split("/")[-1]
+        # 2. Plotar o gráfico 2D do UMAPs
+        fig = plt.figure(figsize=(8, 6))
+        sns.scatterplot(
+            x=embedding[:, 0], 
+            y=embedding[:, 1],
+            hue=subject_labels, # Opcional: passe uma lista com os rótulos/classes dos sujeitos se tiver
+            palette='viridis',
+            s=100,
+            alpha=0.8
+        )
 
-    plt.title(f"UMAP - {title} (BrainOmni)", fontsize=14)
-    plt.xlabel('UMAP Dimension 1')
-    plt.ylabel('UMAP Dimension 2')
-    plt.grid(True, linestyle='--', alpha=0.5)
-    plt.tight_layout()
+        title = str(latent_space_file).split(".")[0].split("/")[-1]
 
-    fig.savefig(f"{PLOTS_DIR}/{title}.png", dpi=300, bbox_inches='tight')
+        plt.title(f"UMAP - {title} (BrainOmni)", fontsize=14)
+        plt.xlabel('UMAP Dimension 1')
+        plt.ylabel('UMAP Dimension 2')
+        plt.grid(True, linestyle='--', alpha=0.5)
+        plt.tight_layout()
+
+        fig.savefig(f"{PLOTS_DIR}/{title}_label_{label_type}.png", dpi=300, bbox_inches='tight')
