@@ -4,12 +4,12 @@ import torch
 import sys
 import matplotlib.pyplot as plt
 from braindecode.datautil import load_concat_dataset
-from einops import rearrange
 import umap
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path # Paths
 from tqdm import tqdm # Progress bar
+import numpy as np
 
 base_dir = Path(__file__).resolve().parent  # Parent folder
 sys.path.append(str(base_dir / "BrainOmni")) # Where the brainomni files live
@@ -40,7 +40,9 @@ class BenchModel():
         self.load_windows(windows_path, ds_name)
         # Variables
         self.final_features_path: str = ""
+        self.final_features_name: str = ""
         self.z_score = False
+        self.convert_to_uv = False
     
     def load_windows(self, windows_path, ds_name):
         windows_path = Path(windows_path)
@@ -64,11 +66,46 @@ class BenchModel():
         final_features = final_features.cpu().numpy()
         limit = len(final_features)
 
+        print("="*50)
+        print(final_features.shape)
+        print("="*50)
+
         # Verify loaded windows (lazy loading)
         assert self.loaded_windows, "Windows are not loaded"
-        labels = self.loaded_windows.description.fillna("N/A").to_dict('list')
-        if limit != 0:
-            labels = {k: v[:limit] for k, v in labels.items()}
+        
+        labels = None
+
+        if self.final_features_name == "windows":
+            subject_ids_path = self.final_features_path.with_name(self.final_features_path.stem + "_subject_ids.pt")
+            assert subject_ids_path.exists(), ("Subject IDs file for windows was not found.")
+
+            subject_ids = torch.load(subject_ids_path).cpu().numpy()
+            assert len(subject_ids) == len(final_features), ("Number of subject IDs does not match the number of windows.")
+
+            # Metadata for each subject
+            subject_metadata = self.loaded_windows.description.fillna("N/A")
+
+            # Map each window to the metadata of its subject
+            labels = {
+                column: [
+                    subject_metadata.iloc[subject_idx][column]
+                    for subject_idx in subject_ids
+                ]
+                for column in subject_metadata.columns
+            }
+
+        else:
+            labels = self.loaded_windows.description.fillna("N/A").to_dict("list")
+
+            if limit != 0:
+                labels = {key: values[:limit] for key, values in labels.items()}
+
+        # Remove labels whose values are all "N/A"
+        labels = {
+            key: values
+            for key, values in labels.items()
+            if not all(value == "N/A" for value in values)
+        }
 
         # For each label, run umap
         for label_type, subject_labels in labels.items():
@@ -77,33 +114,63 @@ class BenchModel():
                 n_neighbors=min(5, len(final_features) - 1), # Adjust n_neighbors if few subjects
                 min_dist=0.1, 
                 metric='cosine', 
-                random_state=42
+                random_state=42,
+                init="random"
             )
             embedding = reducer.fit_transform(final_features)
 
             # Plot 2D umap graphic
-            fig = plt.figure(figsize=(8, 6))
-            sns.scatterplot(
-                x=embedding[:, 0], 
-                y=embedding[:, 1],
-                hue=subject_labels, # List with labels
-                palette='viridis',
-                s=100,
-                alpha=0.8
-            )
+            if("age" not in str(label_type).lower()):
+                fig = plt.figure(figsize=(8, 6))
+                sns.scatterplot(
+                    x=embedding[:, 0], 
+                    y=embedding[:, 1],
+                    hue=subject_labels, # List with labels
+                    palette='viridis',
+                    s=100 if self.final_features_name != "windows" else 20, # Point size
+                    alpha=0.8 if self.final_features_name != "windows" else 0.5, # Opacity
+                    linewidth=0
+                )
 
-            plt.title(f"UMAP - {label_type.capitalize()} {"(Z-Score)" if self.z_score else "(Pure Raw)"} ({self.MODEL_NAME.replace("_", " ").capitalize()})", fontsize=14)
-            plt.xlabel('UMAP Dimension 1')
-            plt.ylabel('UMAP Dimension 2')
-            plt.grid(True, linestyle='--', alpha=0.5)
-            plt.tight_layout()
+                plt.title(f"UMAP - {label_type.capitalize()} {"(Z-Score)" if self.z_score else "(Pure Raw)"} ({self.MODEL_NAME.replace("_", " ").capitalize()})", fontsize=14)
+                plt.xlabel('UMAP Dimension 1')
+                plt.ylabel('UMAP Dimension 2')
+                plt.grid(True, linestyle='--', alpha=0.5)
+                plt.tight_layout()
 
-            if(self.z_score):
-                fig.savefig(f"{self.DS_PLOTS_DIR}/{self.MODEL_NAME}_{self.DS_NAME}_umap_with_z_score_label_{label_type}.png", dpi=300, bbox_inches='tight')
+                fig_path = f"{self.DS_PLOTS_DIR}/{self.MODEL_NAME}_{self.DS_NAME}_{self.final_features_name}_umap"
+                fig_path += "_with_z_score" if self.z_score else ""
+                fig_path += "_converted_to_uv" if self.convert_to_uv else ""
+                fig_path += f"_label_{label_type}.png"
+
+                fig.savefig(fig_path, dpi=300, bbox_inches='tight')
+                plt.close(fig)
             else:
-                fig.savefig(f"{self.DS_PLOTS_DIR}/{self.MODEL_NAME}_{self.DS_NAME}_umap_without_z_score_label_{label_type}.png", dpi=300, bbox_inches='tight')
-            plt.close(fig)
-            
+                fig, ax = plt.subplots(figsize=(10, 7))
+                points = ax.scatter(
+                    embedding[:, 0],
+                    embedding[:, 1],
+                    c=np.asarray(subject_labels, dtype=float),
+                    cmap="viridis",
+                    s=100 if self.final_features_name != "windows" else 20, # Point size
+                    alpha=0.8 if self.final_features_name != "windows" else 0.5, # Opacity
+                    linewidths=0
+                )
+
+                fig.colorbar(points, ax=ax, label=label_type.capitalize())
+                ax.set_title(f"UMAP - {label_type.capitalize()} {"(Z-Score)" if self.z_score else "(Pure Raw)"} ({self.MODEL_NAME.replace("_", " ").capitalize()})")
+                ax.set_xlabel("UMAP Dimension 1")
+                ax.set_ylabel("UMAP Dimension 2")
+                ax.grid(True, linestyle="--", alpha=0.25)
+                fig.tight_layout()
+
+                fig_path = f"{self.DS_PLOTS_DIR}/{self.MODEL_NAME}_{self.DS_NAME}_{self.final_features_name}_umap"
+                fig_path += "_with_z_score" if self.z_score else ""
+                fig_path += "_converted_to_uv" if self.convert_to_uv else ""
+                fig_path += f"_label_{label_type}.png"
+
+                fig.savefig(fig_path, dpi=300, bbox_inches='tight')
+                plt.close(fig)
 
 class BenchBrainomni(BenchModel):
     BASE_DIR = "brainomni_bench"
@@ -148,9 +215,15 @@ class BenchBrainomni(BenchModel):
             p.requires_grad = False
         return model
 
-    def use_avg_latent_space(self, limit=0, z_score=False):
-        LATENT_SPACE_FILE = f"brainomni_{self.DS_NAME}_latent_space_avg_with_z_score.pt" if z_score else f"brainomni_{self.DS_NAME}_latent_space_avg_without_z_score.pt"
+    def use_avg_latent_space(self, limit=0, z_score=False, convert_to_uv=True):
+        LATENT_SPACE_FILE = f"brainomni_{self.DS_NAME}_latent_space_avg"
+        LATENT_SPACE_FILE += "_with_z_score" if z_score else ""
+        LATENT_SPACE_FILE += "_converted_to_uv" if convert_to_uv else ""
+        LATENT_SPACE_FILE += ".pt"
+        
         self.z_score = z_score
+        self.convert_to_uv = convert_to_uv
+        self.final_features_name = "avg"
 
         file_path = Path(f"{self.LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}")
 
@@ -176,9 +249,9 @@ class BenchBrainomni(BenchModel):
                 with tqdm(total=len(window_ds), desc=f"Subject {dataset_idx+1}/{limit if limit != 0 else total_datasets}", unit="window") as pbar:
                     for idx in range(len(window_ds)):
                         x, _, _ = window_ds[idx]
-                        # Applies z-score
-                        if z_score: 
-                            x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-6)
+                        
+                        if convert_to_uv: x = x * 1e6
+                        if z_score: x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-6)
                         
                         inputs = torch.tensor(x, dtype=torch.float32).unsqueeze(0).to(self.device)
                         sensor_type = torch.zeros((1, x.shape[0]), dtype=torch.long).to(self.device)
@@ -201,4 +274,225 @@ class BenchBrainomni(BenchModel):
 
         print("UMAP final format (by subject):", final_features.shape)
         torch.save(final_features, file_path)
+        self.final_features_path = file_path
+
+    def use_median_latent_space(self, limit=0, z_score=False, convert_to_uv=True):
+        LATENT_SPACE_FILE = f"brainomni_{self.DS_NAME}_latent_space_median"
+        LATENT_SPACE_FILE += "_with_z_score" if z_score else ""
+        LATENT_SPACE_FILE += "_converted_to_uv" if convert_to_uv else ""
+        LATENT_SPACE_FILE += f"_limit_{limit}" if limit != 0 else ""
+        LATENT_SPACE_FILE += ".pt"
+
+        self.z_score = z_score
+        self.convert_to_uv = convert_to_uv
+        self.final_features_name = "median"
+
+        file_path = Path(f"{self.LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}")
+
+        if file_path.exists():
+            self.final_features_path = file_path
+            return
+
+        subject_embeddings = []
+
+        with torch.no_grad():
+            total_datasets = len(self.loaded_windows.datasets)
+
+            for dataset_idx, window_ds in enumerate(self.loaded_windows.datasets):
+                if limit != 0 and dataset_idx >= limit:
+                    break
+
+                # Gets 3D position of subject electrodes
+                pos_3d = torch.tensor(
+                    window_ds.ch_pos, dtype=torch.float32
+                ).unsqueeze(0).to(self.device)
+                pos = torch.cat([pos_3d, torch.zeros_like(pos_3d)], dim=-1)
+
+                subject_encoded_windows = []
+
+                # Processing each window individually to optimize RAM usage
+                with tqdm(
+                    total=len(window_ds),
+                    desc=f"Subject {dataset_idx+1}/{limit if limit != 0 else total_datasets}",
+                    unit="window"
+                ) as pbar:
+                    for idx in range(len(window_ds)):
+                        x, _, _ = window_ds[idx]
+
+                        if convert_to_uv: x = x * 1e6
+                        if z_score: x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-6)
+
+                        inputs = torch.tensor(x, dtype=torch.float32).unsqueeze(0).to(self.device)
+                        sensor_type = torch.zeros((1, x.shape[0]), dtype=torch.long).to(self.device)
+
+                        latent_space = self.model.encode(inputs, pos, sensor_type)
+                        subject_encoded_windows.append(latent_space.cpu())
+                        pbar.update(1)
+
+                if not subject_encoded_windows: raise ValueError(f"Subject {dataset_idx} has no windows.")
+
+                # Calculates the median embedding for each subject
+                subject_tensor = torch.cat(
+                    subject_encoded_windows, dim=0
+                ).median(dim=0).values.mean(dim=0)
+
+                subject_embeddings.append(subject_tensor)
+
+                # Free GPU cache
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
+        # Final matrix by subject
+        final_features = torch.stack(subject_embeddings)
+        final_features = final_features.reshape(final_features.size(0), -1)
+
+        print("UMAP final format (by subject):", final_features.shape)
+        torch.save(final_features, file_path)
+        self.final_features_path = file_path
+        
+    def use_std_latent_space(self, limit=0, z_score=False, convert_to_uv=True):
+        LATENT_SPACE_FILE = f"brainomni_{self.DS_NAME}_latent_space_std"
+        LATENT_SPACE_FILE += "_with_z_score" if z_score else ""
+        LATENT_SPACE_FILE += "_converted_to_uv" if convert_to_uv else ""
+        LATENT_SPACE_FILE += f"_limit_{limit}" if limit != 0 else ""
+        LATENT_SPACE_FILE += ".pt"
+
+        self.z_score = z_score
+        self.convert_to_uv = convert_to_uv
+        self.final_features_name = "std"
+
+        file_path = Path(f"{self.LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}")
+
+        if file_path.exists():
+            self.final_features_path = file_path
+            return
+
+        subject_embeddings = []
+
+        with torch.no_grad():
+            total_datasets = len(self.loaded_windows.datasets)
+
+            for dataset_idx, window_ds in enumerate(self.loaded_windows.datasets):
+                if limit != 0 and dataset_idx >= limit:
+                    break
+
+                # Gets 3D position of subject electrodes
+                pos_3d = torch.tensor(window_ds.ch_pos, dtype=torch.float32).unsqueeze(0).to(self.device)
+                pos = torch.cat([pos_3d, torch.zeros_like(pos_3d)], dim=-1)
+
+                subject_encoded_windows = []
+
+                # Processing each window individually to optimize RAM usage
+                with tqdm(
+                    total=len(window_ds),
+                    desc=f"Subject {dataset_idx+1}/{limit if limit != 0 else total_datasets}",
+                    unit="window"
+                ) as pbar:
+                    for idx in range(len(window_ds)):
+                        x, _, _ = window_ds[idx]
+
+                        if convert_to_uv: x = x * 1e6
+                        if z_score: x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-6)
+
+                        inputs = torch.tensor(x, dtype=torch.float32).unsqueeze(0).to(self.device)
+                        sensor_type = torch.zeros((1, x.shape[0]), dtype=torch.long).to(self.device)
+
+                        latent_space = self.model.encode(inputs, pos, sensor_type)
+                        subject_encoded_windows.append(latent_space.cpu())
+                        pbar.update(1)
+
+                if not subject_encoded_windows: raise ValueError(f"Subject {dataset_idx} has no windows.")
+
+                # Calculates the standard deviation of window embeddings
+                window_embeddings = torch.cat(subject_encoded_windows, dim=0).mean(dim=1)
+
+                subject_tensor = window_embeddings.std(dim=0, unbiased=False)
+                subject_embeddings.append(subject_tensor)
+
+                # Free GPU cache
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
+        # Final matrix by subject
+        final_features = torch.stack(subject_embeddings)
+        final_features = final_features.reshape(final_features.size(0), -1)
+
+        print("UMAP final format (by subject):", final_features.shape)
+        torch.save(final_features, file_path)
+        self.final_features_path = file_path
+    
+    def use_windows_latent_space(self, limit=0, z_score=False, convert_to_uv=True):
+        LATENT_SPACE_FILE = f"brainomni_{self.DS_NAME}_latent_space_windows"
+        LATENT_SPACE_FILE += "_with_z_score" if z_score else ""
+        LATENT_SPACE_FILE += "_converted_to_uv" if convert_to_uv else ""
+        LATENT_SPACE_FILE += f"_limit_{limit}" if limit != 0 else ""
+        LATENT_SPACE_FILE += ".pt"
+
+        self.z_score = z_score
+        self.convert_to_uv = convert_to_uv
+        self.final_features_name = "windows"
+
+        file_path = Path(f"{self.LATENT_SPACE_DIR}/{LATENT_SPACE_FILE}")
+
+        if file_path.exists():
+            self.final_features_path = file_path
+            return
+
+        window_embeddings = []
+        window_subject_ids = []
+
+        with torch.no_grad():
+            total_datasets = len(self.loaded_windows.datasets)
+
+            for dataset_idx, window_ds in enumerate(self.loaded_windows.datasets):
+                if limit != 0 and dataset_idx >= limit:
+                    break
+
+                # Gets 3D position of subject electrodes
+                pos_3d = torch.tensor(window_ds.ch_pos, dtype=torch.float32).unsqueeze(0).to(self.device)
+                pos = torch.cat([pos_3d, torch.zeros_like(pos_3d)], dim=-1)
+
+                # Processing each window individually to optimize RAM usage
+                with tqdm(
+                    total=len(window_ds),
+                    desc=f"Subject {dataset_idx+1}/{limit if limit != 0 else total_datasets}",
+                    unit="window"
+                ) as pbar:
+                    for idx in range(len(window_ds)):
+                        x, _, _ = window_ds[idx]
+
+                        if convert_to_uv: x = x * 1e6
+                        if z_score: x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-6)
+
+                        inputs = torch.tensor(x, dtype=torch.float32).unsqueeze(0).to(self.device)
+                        sensor_type = torch.zeros((1, x.shape[0]), dtype=torch.long).to(self.device)
+
+                        latent_space = self.model.encode(inputs, pos, sensor_type)
+
+                        # Calculates one embedding vector per window
+                        window_embedding = latent_space.mean(dim=1).squeeze(0)
+
+                        window_embeddings.append(window_embedding.cpu())
+                        window_subject_ids.append(dataset_idx)
+
+                        pbar.update(1)
+
+                # Free GPU cache
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
+        if not window_embeddings:
+            raise ValueError("No windows were processed.")
+
+        # Final matrix by window
+        final_features = torch.stack(window_embeddings)
+        final_features = final_features.reshape(final_features.size(0), -1)
+
+        print("UMAP final format (by window):", final_features.shape)
+        torch.save(final_features, file_path)
+
+        # Saves subject IDs separately to identify each window in the UMAP
+        subject_ids_path = file_path.with_name(file_path.stem + "_subject_ids.pt")
+        torch.save(torch.tensor(window_subject_ids), subject_ids_path)
+
         self.final_features_path = file_path
