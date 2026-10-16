@@ -1,0 +1,13 @@
+{
+    "l_freq": 0.5,
+    "h_freq": 40,
+    "down_freq": 200,
+    "bad_ch_tolerance": 1,
+    "ransac": true,
+    "ica": true,
+    "window_size": 512,
+    "n_jobs": 1,
+    "ref_channels": [],
+    "montage": "EGI_256",
+    "treat_artifacts": false
+}

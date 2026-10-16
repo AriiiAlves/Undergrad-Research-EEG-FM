@@ -1,0 +1,1035 @@
+
+==========================================================================================
+BRAinDECODE DATASET OVERVIEW
+==========================================================================================
+Dataset class                 : EEGDashDataset
+Number of recordings          : 444641
+
+Dataset description:
+
+Description:
+subject task  age sex session  run gender
+   1049 rest 19.0   F    None None   None
+   1011 rest 21.0   F    None None   None
+   1010 rest 18.0   M    None None   None
+
+Description columns:
+['subject', 'task', 'age', 'sex', 'session', 'run', 'gender']
+
+Available dataset-level attributes:
+datasets                      : [<EEGDashRaw | 256 ch (EEG) | 500.0 Hz | 150956 samples (301.9 s)>
+  description: subject=1049, task=rest, age=19.0, sex=F, session=None, run=None, gender=None
+  (Data not loaded yet — info derived from record metadata.), <EEGDashRaw | 256 ch (EEG) | 500.0 Hz | 139705 samples (279.4 s)>
+  description: subject=1011, task=rest, age=21.0, sex=F, session=None, run=None, gender=None
+  (Data not loaded yet — info derived from record metadata.), <EEGDashRaw | 256 ch (EEG) | 500.0 Hz | 153980 samples (308.0 s)>
+  description: subject=1010, task=rest, age=18.0, sex=M, session=None, run=None, gender=None
+  (Data not loaded yet — info derived from record metadata.)]
+description                   :   subject  task   age sex session   run gender
+0    1049  rest  19.0   F    None  None   None
+1    1011  rest  21.0   F    None  None   None
+2    1010  rest  18.0   M    None  None   None
+transform                     : [None, None, None]
+
+==========================================================================================
+INDIVIDUAL RECORDINGS
+==========================================================================================
+
+==========================================================================================
+RECORDING 0: BRAinDECODE ENTRY
+==========================================================================================
+Entry class                   : EEGDashRaw
+Entry length                  : <bound method EEGDashRaw.__len__ of <EEGDashRaw | 256 ch (EEG) | 500.0 Hz | 150956 samples (301.9 s)>
+  description: subject=1049, task=rest, age=19.0, sex=F, session=None, run=None, gender=None
+  (Data not loaded yet — info derived from record metadata.)>
+Description                   : subject    1049
+task       rest
+age        19.0
+sex           F
+session    None
+run        None
+gender     None
+dtype: object
+
+Entry attributes:
+['bids_root', 'bidspath', 'cache_dir', 'description', 'filecache', 'raw', 'raw_preproc_kwargs', 'record', 'return_ch_pos', 's3file', 'set_description', 'target_name', 'transform']
+
+==========================================================================================
+RECORDING 0: MNE INFORMATION
+==========================================================================================
+Python type                   : RawEEGLAB
+Number of channels            : 256
+Sampling frequency (Hz)       : 500.0
+Number of samples             : 150957
+Duration (seconds)            : 301.912
+First sample                  : 0
+Last sample                   : 150956
+Measurement date              : None
+Channel names                 : ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10', 'E11', 'E12', 'E13', 'E14', 'E15', 'E16', 'E17', 'E18', 'E19', 'E20', 'E21', 'E22', 'E23', 'E24', 'E25', 'E26', 'E27', 'E28', 'E29', 'E30', 'E31', 'E32', 'E33', 'E34', 'E35', 'E36', 'E37', 'E38', 'E39', 'E40', 'E41', 'E42', 'E43', 'E44', 'E45', 'E46', 'E47', 'E48', 'E49', 'E50', 'E51', 'E52', 'E53', 'E54', 'E55', 'E56', 'E57', 'E58', 'E59', 'E60', 'E61', 'E62', 'E63', 'E64', 'E65', 'E66', 'E67', 'E68', 'E69', 'E70', 'E71', 'E72', 'E73', 'E74', 'E75', 'E76', 'E77', 'E78', 'E79', 'E80', 'E81', 'E82', 'E83', 'E84', 'E85', 'E86', 'E87', 'E88', 'E89', 'E90', 'E91', 'E92', 'E93', 'E94', 'E95', 'E96', 'E97', 'E98', 'E99', 'E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E107', 'E108', 'E109', 'E110', 'E111', 'E112', 'E113', 'E114', 'E115', 'E116', 'E117', 'E118', 'E119', 'E120', 'E121', 'E122', 'E123', 'E124', 'E125', 'E126', 'E127', 'E128', 'E129', 'E130', 'E131', 'E132', 'E133', 'E134', 'E135', 'E136', 'E137', 'E138', 'E139', 'E140', 'E141', 'E142', 'E143', 'E144', 'E145', 'E146', 'E147', 'E148', 'E149', 'E150', 'E151', 'E152', 'E153', 'E154', 'E155', 'E156', 'E157', 'E158', 'E159', 'E160', 'E161', 'E162', 'E163', 'E164', 'E165', 'E166', 'E167', 'E168', 'E169', 'E170', 'E171', 'E172', 'E173', 'E174', 'E175', 'E176', 'E177', 'E178', 'E179', 'E180', 'E181', 'E182', 'E183', 'E184', 'E185', 'E186', 'E187', 'E188', 'E189', 'E190', 'E191', 'E192', 'E193', 'E194', 'E195', 'E196', 'E197', 'E198', 'E199', 'E200', 'E201', 'E202', 'E203', 'E204', 'E205', 'E206', 'E207', 'E208', 'E209', 'E210', 'E211', 'E212', 'E213', 'E214', 'E215', 'E216', 'E217', 'E218', 'E219', 'E220', 'E221', 'E222', 'E223', 'E224', 'E225', 'E226', 'E227', 'E228', 'E229', 'E230', 'E231', 'E232', 'E233', 'E234', 'E235', 'E236', 'E237', 'E238', 'E239', 'E240', 'E241', 'E242', 'E243', 'E244', 'E245', 'E246', 'E247', 'E248', 'E249', 'E250', 'E251', 'E252', 'E253', 'E254', 'E255', 'E256']
+
+Full MNE Info:
+<Info | 10 non-empty values
+ bads: []
+ ch_names: E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12, E13, E14, ...
+ chs: 256 EEG
+ custom_ref_applied: False
+ dig: 259 items (3 Cardinal, 256 EEG)
+ highpass: 0.0 Hz
+ line_freq: 60.0
+ lowpass: 250.0 Hz
+ meas_date: unspecified
+ nchan: 256
+ projs: []
+ sfreq: 500.0 Hz
+ subject_info: <subject_info | >
+>
+
+Channel types:
+['eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg']
+
+Channel counts by type:
+  eeg: 256
+
+Montage:
+<DigMontage | 0 extras (headshape), 0 HPIs, 3 fiducials, 256 channels>
+
+Annotations:
+  onset  duration description
+ 55.944    59.980   eyes_open
+115.924    60.000 eyes_closed
+175.924    59.998   eyes_open
+235.922    65.990 eyes_closed
+
+Events derived from annotations:
+Event count                   : 4
+Event IDs                     : {'eyes_closed': 1, 'eyes_open': 2}
+First 20 events [sample, previous value, event ID]:
+[[ 27972      0      2]
+ [ 57962      0      1]
+ [ 87962      0      2]
+ [117961      0      1]]
+
+Signal statistics:
+  E1           type=eeg      min=-3.785234e-03 max=-9.024412e-04 mean=-3.077921e-03 std=2.595013e-04
+  E2           type=eeg      min=-1.018582e-02 max=-8.873300e-03 mean=-9.534781e-03 std=2.200216e-04
+  E3           type=eeg      min=-1.436779e-02 max=-1.306838e-02 mean=-1.365937e-02 std=2.416424e-04
+  E4           type=eeg      min=-9.929046e-03 max=-8.979962e-03 mean=-9.450598e-03 std=1.659387e-04
+  E5           type=eeg      min=-7.154904e-03 max=-6.205620e-03 mean=-6.653900e-03 std=1.830982e-04
+  E6           type=eeg      min=-6.952529e-03 max=-5.929285e-03 mean=-6.446181e-03 std=2.206677e-04
+  E7           type=eeg      min=-4.627469e-03 max=-3.617730e-03 mean=-4.177201e-03 std=2.692949e-04
+  E8           type=eeg      min=-3.567017e-03 max=-1.779967e-03 mean=-2.423124e-03 std=4.803233e-04
+  E9           type=eeg      min=-2.611619e-03 max=-1.015563e-03 mean=-1.723568e-03 std=5.021010e-04
+  E10          type=eeg      min=-2.173545e-03 max=4.057594e-04 mean=-1.224913e-03 std=4.261113e-04
+  E11          type=eeg      min=-6.498140e-03 max=-4.182800e-03 mean=-5.368723e-03 std=5.498648e-04
+  E12          type=eeg      min=-8.888189e-03 max=-7.458473e-03 mean=-8.126461e-03 std=2.879759e-04
+  E13          type=eeg      min=-8.817408e-03 max=-7.289235e-03 mean=-8.021413e-03 std=2.625978e-04
+  E14          type=eeg      min=-3.544059e-03 max=-2.582255e-03 mean=-3.060630e-03 std=1.630255e-04
+  E15          type=eeg      min=-2.250088e-03 max=-1.085448e-03 mean=-1.722193e-03 std=2.508795e-04
+  E16          type=eeg      min=-2.932332e-03 max=-1.193156e-03 mean=-2.222365e-03 std=3.341276e-04
+  E17          type=eeg      min=-5.738202e-03 max=-4.735618e-03 mean=-5.274314e-03 std=2.395611e-04
+  E18          type=eeg      min=-5.323323e-03 max=-1.320554e-03 mean=-3.279113e-03 std=7.267973e-04
+  E19          type=eeg      min=7.492429e-03 max=8.812547e-03 mean=8.055472e-03 std=2.454781e-04
+  E20          type=eeg      min=-6.774047e-03 max=-3.436504e-03 mean=-4.657887e-03 std=8.657176e-04
+  E21          type=eeg      min=-8.120751e-03 max=-5.979947e-03 mean=-7.096140e-03 std=5.697322e-04
+  E22          type=eeg      min=-2.859558e-03 max=4.444465e-04 mean=-1.028293e-03 std=1.034983e-03
+  E23          type=eeg      min=-4.476649e-03 max=-3.262368e-03 mean=-3.987152e-03 std=1.879189e-04
+  E24          type=eeg      min=-4.326357e-03 max=-3.034366e-03 mean=-3.725135e-03 std=3.135845e-04
+  E25          type=eeg      min=-2.384181e-03 max=-1.182109e-03 mean=-1.974042e-03 std=1.807922e-04
+  E26          type=eeg      min=-1.110988e-02 max=-9.854672e-03 mean=-1.050336e-02 std=2.217381e-04
+  E27          type=eeg      min=-9.056645e-03 max=-7.082350e-03 mean=-7.999999e-03 std=4.232373e-04
+  E28          type=eeg      min=-7.074868e-03 max=-4.962168e-03 mean=-6.254843e-03 std=5.469524e-04
+  E29          type=eeg      min=-6.518181e-03 max=-5.487570e-03 mean=-6.096606e-03 std=2.041402e-04
+  E30          type=eeg      min=-6.832983e-03 max=-6.193717e-03 mean=-6.544710e-03 std=1.089842e-04
+  E31          type=eeg      min=-1.883226e-03 max=-1.916211e-05 mean=-1.058607e-03 std=3.336561e-04
+  E32          type=eeg      min=-8.471179e-03 max=-5.342563e-03 mean=-7.549583e-03 std=3.571300e-04
+  E33          type=eeg      min=6.998609e-05 max=1.613238e-03 mean=8.135968e-04 std=2.682459e-04
+  E34          type=eeg      min=-9.791769e-03 max=-8.486631e-03 mean=-8.930424e-03 std=2.252961e-04
+  E35          type=eeg      min=-7.414899e-03 max=-6.281667e-03 mean=-6.930577e-03 std=1.700909e-04
+  E36          type=eeg      min=-4.661713e-03 max=-3.849238e-03 mean=-4.232533e-03 std=1.361599e-04
+  E37          type=eeg      min=-5.312315e-03 max=1.416124e-03 mean=-1.633985e-03 std=1.159808e-03
+  E38          type=eeg      min=-2.322031e-03 max=3.534224e-04 mean=-1.070297e-03 std=6.877333e-04
+  E39          type=eeg      min=-1.751637e-02 max=-1.527922e-02 mean=-1.653686e-02 std=3.399380e-04
+  E40          type=eeg      min=-7.099454e-03 max=-6.428954e-03 mean=-6.750518e-03 std=1.025823e-04
+  E41          type=eeg      min=-2.163804e-03 max=-1.024574e-03 mean=-1.662554e-03 std=1.985823e-04
+  E42          type=eeg      min=-9.317499e-04 max=2.144228e-04 mean=-5.981286e-04 std=1.804230e-04
+  E43          type=eeg      min=-1.962335e-03 max=-1.316186e-03 mean=-1.679462e-03 std=1.418588e-04
+  E44          type=eeg      min=1.943365e-03 max=2.528537e-03 mean=2.167864e-03 std=1.248504e-04
+  E45          type=eeg      min=-4.720342e-04 max=9.625707e-04 mean=2.146601e-04 std=4.239550e-04
+  E46          type=eeg      min=-5.597572e-03 max=-5.234860e-05 mean=-2.081919e-03 std=7.753455e-04
+  E47          type=eeg      min=-1.066074e-02 max=-7.462809e-03 mean=-9.154411e-03 std=6.556268e-04
+  E48          type=eeg      min=-9.305075e-03 max=-8.071081e-03 mean=-8.863501e-03 std=2.281587e-04
+  E49          type=eeg      min=-3.882804e-03 max=-2.429708e-03 mean=-3.380407e-03 std=1.916061e-04
+  E50          type=eeg      min=-6.709682e-03 max=-5.974213e-03 mean=-6.416148e-03 std=1.512964e-04
+  E51          type=eeg      min=6.701534e-04 max=1.873933e-03 mean=1.270285e-03 std=2.328619e-04
+  E52          type=eeg      min=-5.851957e-03 max=-4.726235e-03 mean=-5.303476e-03 std=2.805463e-04
+  E53          type=eeg      min=1.386302e-04 max=9.107236e-04 mean=5.557619e-04 std=1.990106e-04
+  E54          type=eeg      min=-1.151701e-02 max=-9.258292e-03 mean=-1.036932e-02 std=5.115640e-04
+  E55          type=eeg      min=-1.342128e-02 max=-1.133928e-02 mean=-1.217205e-02 std=4.492689e-04
+  E56          type=eeg      min=-1.123406e-02 max=-9.548812e-03 mean=-1.045466e-02 std=4.053722e-04
+  E57          type=eeg      min=-8.884677e-03 max=-6.788376e-03 mean=-7.494228e-03 std=4.799040e-04
+  E58          type=eeg      min=-6.956713e-03 max=-3.790476e-03 mean=-5.472400e-03 std=7.671701e-04
+  E59          type=eeg      min=-6.137040e-03 max=-2.724282e-03 mean=-4.443367e-03 std=9.407061e-04
+  E60          type=eeg      min=-3.224073e-03 max=-2.315198e-03 mean=-2.736573e-03 std=2.062560e-04
+  E61          type=eeg      min=-1.109022e-02 max=1.732103e-03 mean=-5.010363e-03 std=3.698683e-03
+  E62          type=eeg      min=-9.887109e-03 max=-7.038324e-03 mean=-9.469703e-03 std=2.399135e-04
+  E63          type=eeg      min=-6.356113e-03 max=-4.729791e-03 mean=-5.422574e-03 std=3.592966e-04
+  E64          type=eeg      min=-8.880454e-03 max=-6.327118e-03 mean=-7.294853e-03 std=5.931376e-04
+  E65          type=eeg      min=-8.215824e-03 max=-6.797644e-03 mean=-7.330556e-03 std=2.915396e-04
+  E66          type=eeg      min=-1.089981e-02 max=-8.469921e-03 mean=-9.636959e-03 std=7.115521e-04
+  E67          type=eeg      min=-2.768755e-02 max=4.626901e-02 mean=-1.097732e-02 std=2.121742e-02
+  E68          type=eeg      min=2.433300e-04 max=3.578791e-02 mean=1.747981e-02 std=9.031308e-03
+  E69          type=eeg      min=-1.206005e-02 max=-9.414327e-03 mean=-1.133974e-02 std=3.380689e-04
+  E70          type=eeg      min=-1.016861e-02 max=-8.177335e-03 mean=-9.157665e-03 std=3.861366e-04
+  E71          type=eeg      min=-1.315055e-02 max=-1.036378e-02 mean=-1.179134e-02 std=7.564230e-04
+  E72          type=eeg      min=-3.622660e-03 max=-2.332299e-03 mean=-2.746951e-03 std=3.127234e-04
+  E73          type=eeg      min=-1.014413e-02 max=4.741680e-02 mean=-8.195325e-03 std=3.950761e-03
+  E74          type=eeg      min=-7.518269e-03 max=-6.620243e-03 mean=-7.226294e-03 std=1.243210e-04
+  E75          type=eeg      min=-9.106145e-03 max=-8.238417e-03 mean=-8.575593e-03 std=1.474712e-04
+  E76          type=eeg      min=-6.294989e-03 max=-5.229640e-03 mean=-5.579303e-03 std=1.555753e-04
+  E77          type=eeg      min=-8.319436e-03 max=-7.151405e-03 mean=-7.752363e-03 std=2.635481e-04
+  E78          type=eeg      min=-2.529407e-03 max=-9.356516e-04 mean=-1.670559e-03 std=4.300679e-04
+  E79          type=eeg      min=-1.579645e-03 max=-6.853201e-04 mean=-1.186170e-03 std=2.042397e-04
+  E80          type=eeg      min=3.229959e-03 max=4.029737e-03 mean=3.582525e-03 std=2.203697e-04
+  E81          type=eeg      min=-8.823672e-04 max=4.849118e-04 mean=-1.293235e-04 std=3.870869e-04
+  E82          type=eeg      min=-1.202895e-02 max=-1.031467e-02 mean=-1.133668e-02 std=3.240687e-04
+  E83          type=eeg      min=-1.489210e-02 max=-1.242197e-02 mean=-1.373550e-02 std=4.484119e-04
+  E84          type=eeg      min=-8.236668e-03 max=-7.247452e-03 mean=-7.762041e-03 std=1.706180e-04
+  E85          type=eeg      min=-1.162549e-02 max=-1.074160e-02 mean=-1.129928e-02 std=1.521624e-04
+  E86          type=eeg      min=-7.698870e-03 max=-6.426477e-03 mean=-7.027515e-03 std=3.350004e-04
+  E87          type=eeg      min=-4.644236e-03 max=-3.838319e-03 mean=-4.301744e-03 std=1.969546e-04
+  E88          type=eeg      min=-7.581240e-03 max=-6.145402e-03 mean=-6.773220e-03 std=1.371696e-04
+  E89          type=eeg      min=-9.455596e-04 max=-4.353352e-04 mean=-7.010386e-04 std=9.492492e-05
+  E90          type=eeg      min=-4.758487e-02 max=-3.346443e-02 mean=-3.990915e-02 std=2.612660e-03
+  E91          type=eeg      min=2.209454e-01 max=2.209454e-01 mean=2.209454e-01 std=0.000000e+00
+  E92          type=eeg      min=2.224694e-01 max=2.224694e-01 mean=2.224694e-01 std=5.551115e-17
+  E93          type=eeg      min=-1.604461e-02 max=-1.256040e-02 mean=-1.425468e-02 std=8.460105e-04
+  E94          type=eeg      min=-1.325750e-02 max=-1.114964e-02 mean=-1.235488e-02 std=3.988205e-04
+  E95          type=eeg      min=-1.202545e-02 max=-1.077095e-02 mean=-1.132365e-02 std=2.338563e-04
+  E96          type=eeg      min=-8.839955e-03 max=-7.639431e-03 mean=-8.255643e-03 std=2.555729e-04
+  E97          type=eeg      min=-9.190907e-03 max=-7.222849e-03 mean=-8.219976e-03 std=5.006052e-04
+  E98          type=eeg      min=-7.660699e-03 max=-6.931452e-03 mean=-7.334673e-03 std=1.045685e-04
+  E99          type=eeg      min=-7.201525e-03 max=-5.377207e-03 mean=-6.251720e-03 std=5.004820e-04
+  E100         type=eeg      min=-2.535481e-02 max=-1.636410e-02 mean=-2.042567e-02 std=1.552779e-03
+  E101         type=eeg      min=-7.976943e-02 max=-5.115236e-02 mean=-6.414749e-02 std=5.523405e-03
+  E102         type=eeg      min=-2.277834e-02 max=-1.956489e-02 mean=-2.186326e-02 std=4.687543e-04
+  E103         type=eeg      min=-2.117029e-02 max=-9.694883e-03 mean=-1.702813e-02 std=1.621311e-03
+  E104         type=eeg      min=-1.303855e-02 max=-1.118462e-02 mean=-1.205799e-02 std=4.304645e-04
+  E105         type=eeg      min=-1.058646e-02 max=-9.222292e-03 mean=-9.887058e-03 std=3.014212e-04
+  E106         type=eeg      min=-1.330430e-02 max=-1.122833e-02 mean=-1.229047e-02 std=4.828357e-04
+  E107         type=eeg      min=-8.009294e-03 max=-6.242525e-03 mean=-7.109627e-03 std=3.937665e-04
+  E108         type=eeg      min=-1.459370e-02 max=-1.238874e-02 mean=-1.350512e-02 std=3.788965e-04
+  E109         type=eeg      min=-1.732065e-02 max=-1.181417e-02 mean=-1.419782e-02 std=1.038062e-03
+  E110         type=eeg      min=-2.933052e-02 max=-1.984296e-02 mean=-2.427045e-02 std=1.620389e-03
+  E111         type=eeg      min=-2.717305e-02 max=-1.029792e-02 mean=-2.430129e-02 std=5.823793e-04
+  E112         type=eeg      min=-2.834892e-02 max=-2.493438e-02 mean=-2.664427e-02 std=7.420459e-04
+  E113         type=eeg      min=-2.162190e-02 max=-1.864951e-02 mean=-2.011350e-02 std=6.595798e-04
+  E114         type=eeg      min=-1.533186e-02 max=-1.291325e-02 mean=-1.412953e-02 std=4.919045e-04
+  E115         type=eeg      min=-1.767362e-02 max=-1.336147e-02 mean=-1.538428e-02 std=8.057019e-04
+  E116         type=eeg      min=-2.701953e-02 max=-1.972097e-02 mean=-2.314633e-02 std=1.342933e-03
+  E117         type=eeg      min=-3.667729e-02 max=-2.559131e-02 mean=-3.080479e-02 std=1.965338e-03
+  E118         type=eeg      min=-4.088352e-02 max=-2.885896e-02 mean=-3.433345e-02 std=2.260437e-03
+  E119         type=eeg      min=-5.978906e-02 max=-3.905766e-02 mean=-4.856262e-02 std=3.882066e-03
+  E120         type=eeg      min=-3.873217e-02 max=-3.098059e-02 mean=-3.415613e-02 std=1.725392e-03
+  E121         type=eeg      min=-3.453029e-02 max=-2.711728e-02 mean=-3.059440e-02 std=1.399671e-03
+  E122         type=eeg      min=-3.471647e-02 max=-2.559994e-02 mean=-2.996844e-02 std=1.625575e-03
+  E123         type=eeg      min=-3.459570e-02 max=-2.491277e-02 mean=-2.954354e-02 std=1.678957e-03
+  E124         type=eeg      min=-3.883492e-02 max=-2.715971e-02 mean=-3.272842e-02 std=2.050990e-03
+  E125         type=eeg      min=-3.827093e-02 max=-2.607924e-02 mean=-3.176865e-02 std=2.171431e-03
+  E126         type=eeg      min=-4.247845e-02 max=-2.893972e-02 mean=-3.514813e-02 std=2.460546e-03
+  E127         type=eeg      min=-5.497992e-02 max=-3.758643e-02 mean=-4.545907e-02 std=3.167185e-03
+  E128         type=eeg      min=-5.237962e-02 max=-3.735060e-02 mean=-4.385519e-02 std=2.461508e-03
+  E129         type=eeg      min=-1.532172e-02 max=-1.344660e-02 mean=-1.419169e-02 std=2.073949e-04
+  E130         type=eeg      min=-1.120538e-02 max=-8.771827e-03 mean=-1.007147e-02 std=2.093834e-04
+  E131         type=eeg      min=-3.233025e-03 max=-2.211238e-03 mean=-2.674658e-03 std=1.182253e-04
+  E132         type=eeg      min=-6.179386e-04 max=-2.582667e-05 mean=-3.474994e-04 std=6.436291e-05
+  E133         type=eeg      min=-4.900462e-02 max=2.215102e-01 mean=-3.462819e-02 std=3.881071e-02
+  E134         type=eeg      min=-4.765606e-02 max=1.086923e-02 mean=-4.226634e-02 std=2.264789e-03
+  E135         type=eeg      min=-4.818506e-02 max=-3.520708e-02 mean=-4.139660e-02 std=2.355741e-03
+  E136         type=eeg      min=-4.917925e-02 max=-3.605116e-02 mean=-4.224842e-02 std=2.386285e-03
+  E137         type=eeg      min=-4.501194e-02 max=-3.143467e-02 mean=-3.765133e-02 std=2.495406e-03
+  E138         type=eeg      min=-4.262055e-02 max=-2.857582e-02 mean=-3.495016e-02 std=2.525934e-03
+  E139         type=eeg      min=-4.873896e-02 max=-3.332291e-02 mean=-4.028900e-02 std=2.728589e-03
+  E140         type=eeg      min=-4.558905e-02 max=-3.279350e-02 mean=-3.841201e-02 std=2.130602e-03
+  E141         type=eeg      min=-1.359344e-02 max=-1.009568e-02 mean=-1.198716e-02 std=4.092138e-04
+  E142         type=eeg      min=-6.946637e-03 max=-4.730352e-03 mean=-5.903375e-03 std=3.299616e-04
+  E143         type=eeg      min=-4.098423e-03 max=-3.113874e-03 mean=-3.604513e-03 std=2.852655e-04
+  E144         type=eeg      min=-1.054761e-03 max=-5.130300e-04 mean=-8.573980e-04 std=9.837821e-05
+  E145         type=eeg      min=2.220057e-01 max=2.220057e-01 mean=2.220057e-01 std=2.775558e-17
+  E146         type=eeg      min=-5.087561e-02 max=-3.508954e-02 mean=-4.356432e-02 std=2.637819e-03
+  E147         type=eeg      min=-4.883202e-02 max=-3.674602e-02 mean=-4.224222e-02 std=2.131287e-03
+  E148         type=eeg      min=-3.959028e-02 max=-2.975074e-02 mean=-3.410737e-02 std=1.714887e-03
+  E149         type=eeg      min=-3.251664e-02 max=-2.454407e-02 mean=-2.801650e-02 std=1.295212e-03
+  E150         type=eeg      min=-3.077950e-02 max=-2.388721e-02 mean=-2.675855e-02 std=9.937473e-04
+  E151         type=eeg      min=-1.661318e-02 max=-1.438852e-02 mean=-1.539573e-02 std=2.086222e-04
+  E152         type=eeg      min=-1.365650e-02 max=-1.203516e-02 mean=-1.299200e-02 std=1.223013e-04
+  E153         type=eeg      min=-6.307628e-03 max=-4.741254e-03 mean=-5.656129e-03 std=3.496302e-04
+  E154         type=eeg      min=-4.986680e-03 max=-4.432804e-03 mean=-4.703252e-03 std=1.235266e-04
+  E155         type=eeg      min=-6.017371e-03 max=-4.418362e-03 mean=-5.196677e-03 std=4.607925e-04
+  E156         type=eeg      min=-5.202265e-02 max=-3.771462e-02 mean=-4.442485e-02 std=2.772716e-03
+  E157         type=eeg      min=-3.421624e-02 max=-2.711471e-02 mean=-3.005500e-02 std=1.247734e-03
+  E158         type=eeg      min=-2.750217e-02 max=-2.306501e-02 mean=-2.517754e-02 std=8.395814e-04
+  E159         type=eeg      min=-2.173306e-02 max=-1.823023e-02 mean=-1.988417e-02 std=6.408358e-04
+  E160         type=eeg      min=-1.771936e-02 max=-1.550686e-02 mean=-1.653925e-02 std=4.091100e-04
+  E161         type=eeg      min=-1.222470e-02 max=-1.091958e-02 mean=-1.153625e-02 std=1.959457e-04
+  E162         type=eeg      min=-1.131467e-02 max=-1.051673e-02 mean=-1.093194e-02 std=1.402218e-04
+  E163         type=eeg      min=-6.876042e-03 max=-6.269878e-03 mean=-6.620102e-03 std=1.146017e-04
+  E164         type=eeg      min=-1.028725e-02 max=-8.644988e-03 mean=-9.398879e-03 std=4.718615e-04
+  E165         type=eeg      min=-5.946623e-02 max=-4.265221e-02 mean=-5.069939e-02 std=3.261514e-03
+  E166         type=eeg      min=-3.917270e-02 max=-3.367532e-02 mean=-3.626575e-02 std=9.275608e-04
+  E167         type=eeg      min=-2.595071e-02 max=-2.240706e-02 mean=-2.411049e-02 std=7.172438e-04
+  E168         type=eeg      min=-1.613541e-02 max=-1.460802e-02 mean=-1.539645e-02 std=3.275222e-04
+  E169         type=eeg      min=-1.586567e-02 max=-1.424285e-02 mean=-1.507853e-02 std=3.366813e-04
+  E170         type=eeg      min=-1.381556e-02 max=-1.310912e-02 mean=-1.343748e-02 std=1.267920e-04
+  E171         type=eeg      min=-8.774527e-03 max=-8.118887e-03 mean=-8.515191e-03 std=1.184329e-04
+  E172         type=eeg      min=-8.601938e-03 max=-7.964677e-03 mean=-8.375212e-03 std=1.144722e-04
+  E173         type=eeg      min=-7.184663e-03 max=-5.760613e-03 mean=-6.502114e-03 std=3.847298e-04
+  E174         type=eeg      min=-5.764308e-02 max=-5.006429e-02 mean=-5.354246e-02 std=1.347751e-03
+  E175         type=eeg      min=-2.775538e-02 max=-2.496052e-02 mean=-2.633379e-02 std=5.694527e-04
+  E176         type=eeg      min=-1.780029e-02 max=-1.584109e-02 mean=-1.684611e-02 std=4.273539e-04
+  E177         type=eeg      min=-1.642021e-02 max=-1.494312e-02 mean=-1.567152e-02 std=3.526493e-04
+  E178         type=eeg      min=-9.042118e-03 max=-7.563995e-03 mean=-8.306460e-03 std=3.724006e-04
+  E179         type=eeg      min=-1.109949e-02 max=-1.017921e-02 mean=-1.066263e-02 std=2.166091e-04
+  E180         type=eeg      min=-1.190562e-02 max=-1.075917e-02 mean=-1.129065e-02 std=2.619185e-04
+  E181         type=eeg      min=-7.287471e-03 max=-6.601552e-03 mean=-6.970355e-03 std=1.286827e-04
+  E182         type=eeg      min=-6.536944e-03 max=-5.909678e-03 mean=-6.268655e-03 std=9.276134e-05
+  E183         type=eeg      min=-6.961850e-03 max=-5.756949e-03 mean=-6.258895e-03 std=2.964237e-04
+  E184         type=eeg      min=-6.355806e-03 max=-5.551276e-03 mean=-5.965242e-03 std=1.948509e-04
+  E185         type=eeg      min=5.060063e-04 max=1.119027e-03 mean=7.898840e-04 std=1.151496e-04
+  E186         type=eeg      min=8.881121e-04 max=1.617477e-03 mean=1.172026e-03 std=1.240908e-04
+  E187         type=eeg      min=-3.426009e-02 max=-2.428646e-02 mean=-3.076632e-02 std=1.621623e-03
+  E188         type=eeg      min=-2.467260e-02 max=-2.231412e-02 mean=-2.352123e-02 std=5.370914e-04
+  E189         type=eeg      min=-1.888736e-02 max=-1.652863e-02 mean=-1.783715e-02 std=5.159283e-04
+  E190         type=eeg      min=-9.082049e-03 max=-6.697010e-03 mean=-7.697110e-03 std=2.283454e-04
+  E191         type=eeg      min=-1.600377e-02 max=-1.447707e-02 mean=-1.527734e-02 std=3.729477e-04
+  E192         type=eeg      min=-1.368512e-02 max=-1.251202e-02 mean=-1.314789e-02 std=2.559991e-04
+  E193         type=eeg      min=-1.317686e-02 max=-1.206390e-02 mean=-1.256743e-02 std=2.636846e-04
+  E194         type=eeg      min=-8.962581e-03 max=-7.933316e-03 mean=-8.353510e-03 std=1.987442e-04
+  E195         type=eeg      min=-8.414356e-03 max=-7.554146e-03 mean=-7.956487e-03 std=1.654198e-04
+  E196         type=eeg      min=-6.680808e-03 max=-6.024689e-03 mean=-6.428117e-03 std=1.150784e-04
+  E197         type=eeg      min=-5.992412e-03 max=-4.241345e-03 mean=-5.006325e-03 std=4.622339e-04
+  E198         type=eeg      min=-2.304371e-03 max=-1.325679e-03 mean=-1.715239e-03 std=2.223095e-04
+  E199         type=eeg      min=-2.299640e-02 max=6.888086e-02 mean=-1.543586e-02 std=1.845174e-02
+  E200         type=eeg      min=2.218296e-01 max=2.218296e-01 mean=2.218296e-01 std=2.775558e-17
+  E201         type=eeg      min=-1.878407e-02 max=1.027925e-01 mean=3.611319e-03 std=3.050821e-02
+  E202         type=eeg      min=-1.104454e-02 max=-9.991573e-03 mean=-1.058998e-02 std=1.786882e-04
+  E203         type=eeg      min=-1.515829e-02 max=-1.418681e-02 mean=-1.471355e-02 std=1.718175e-04
+  E204         type=eeg      min=-9.315099e-03 max=-8.395425e-03 mean=-8.881414e-03 std=1.876496e-04
+  E205         type=eeg      min=-8.422404e-03 max=-7.726103e-03 mean=-8.160000e-03 std=1.082735e-04
+  E206         type=eeg      min=-7.117000e-03 max=-6.456130e-03 mean=-6.837543e-03 std=9.612672e-05
+  E207         type=eeg      min=-1.094992e-03 max=-2.416060e-04 mean=-6.979431e-04 std=1.761759e-04
+  E208         type=eeg      min=2.208727e-01 max=2.208727e-01 mean=2.208727e-01 std=0.000000e+00
+  E209         type=eeg      min=1.222542e-01 max=2.228057e-01 mean=2.227022e-01 std=2.431889e-03
+  E210         type=eeg      min=-1.641024e-02 max=-1.346577e-02 mean=-1.590479e-02 std=3.357642e-04
+  E211         type=eeg      min=-1.538516e-02 max=-1.417683e-02 mean=-1.483879e-02 std=2.544970e-04
+  E212         type=eeg      min=-1.209951e-02 max=-1.112254e-02 mean=-1.166618e-02 std=1.899023e-04
+  E213         type=eeg      min=-8.528489e-03 max=-7.758477e-03 mean=-8.250288e-03 std=1.227323e-04
+  E214         type=eeg      min=-7.875007e-03 max=-7.145684e-03 mean=-7.571844e-03 std=1.349020e-04
+  E215         type=eeg      min=-6.535479e-03 max=-5.825758e-03 mean=-6.129540e-03 std=1.302190e-04
+  E216         type=eeg      min=2.228448e-01 max=2.228448e-01 mean=2.228448e-01 std=0.000000e+00
+  E217         type=eeg      min=-1.214342e-02 max=-1.017260e-02 mean=-1.139534e-02 std=3.706696e-04
+  E218         type=eeg      min=-9.518537e-03 max=1.301449e-03 mean=-3.900247e-03 std=2.263182e-03
+  E219         type=eeg      min=8.259700e-03 max=1.676026e-01 mean=7.388971e-02 std=4.030987e-02
+  E220         type=eeg      min=-1.547707e-02 max=-1.295515e-02 mean=-1.399759e-02 std=5.133877e-04
+  E221         type=eeg      min=-1.447799e-02 max=-1.326512e-02 mean=-1.388960e-02 std=2.342901e-04
+  E222         type=eeg      min=-1.238955e-02 max=-1.118669e-02 mean=-1.179009e-02 std=1.797256e-04
+  E223         type=eeg      min=-1.213012e-02 max=-1.135100e-02 mean=-1.177450e-02 std=1.447166e-04
+  E224         type=eeg      min=-9.213129e-03 max=-8.344973e-03 mean=-8.769433e-03 std=1.466454e-04
+  E225         type=eeg      min=-2.215702e-02 max=-2.011939e-02 mean=-2.130292e-02 std=4.016458e-04
+  E226         type=eeg      min=-1.219099e-03 max=1.652357e-03 mean=-4.117355e-04 std=2.739306e-04
+  E227         type=eeg      min=-1.046344e-02 max=-9.493139e-03 mean=-1.006376e-02 std=1.431403e-04
+  E228         type=eeg      min=-1.772698e-02 max=2.226962e-01 mean=1.813744e-02 std=4.790823e-02
+  E229         type=eeg      min=-1.559327e-02 max=2.344089e-01 mean=2.023694e-01 std=6.610522e-02
+  E230         type=eeg      min=1.340339e-03 max=5.710146e-03 mean=2.210611e-03 std=5.088576e-04
+  E231         type=eeg      min=-3.222475e-03 max=-4.821512e-04 mean=-2.529092e-03 std=3.415419e-04
+  E232         type=eeg      min=-1.030126e-02 max=-5.980103e-03 mean=-9.189905e-03 std=6.293422e-04
+  E233         type=eeg      min=-2.153783e-02 max=2.223847e-01 mean=1.878945e-01 std=8.075179e-02
+  E234         type=eeg      min=-8.454415e-03 max=2.864284e-02 mean=-6.984619e-03 std=1.156081e-03
+  E235         type=eeg      min=-9.110540e-03 max=-5.318466e-03 mean=-7.983200e-03 std=5.967120e-04
+  E236         type=eeg      min=-1.054856e-02 max=-6.232479e-03 mean=-9.672321e-03 std=5.471020e-04
+  E237         type=eeg      min=-1.520039e-02 max=2.222269e-01 mean=1.466080e-01 std=1.019269e-01
+  E238         type=eeg      min=-5.481231e-03 max=-6.676109e-05 mean=-4.647779e-03 std=6.371757e-04
+  E239         type=eeg      min=-5.628944e-03 max=-2.293750e-03 mean=-4.732526e-03 std=3.677215e-04
+  E240         type=eeg      min=-1.151974e-02 max=8.389123e-02 mean=-1.005868e-02 std=2.159675e-03
+  E241         type=eeg      min=-3.204259e-03 max=4.882469e-03 mean=-1.956118e-03 std=1.174922e-03
+  E242         type=eeg      min=-1.310116e-03 max=6.342149e-03 mean=-2.388934e-04 std=9.840704e-04
+  E243         type=eeg      min=-6.496897e-03 max=1.927910e-01 mean=-4.833497e-03 std=8.463261e-03
+  E244         type=eeg      min=-4.875629e-03 max=7.504171e-04 mean=-3.328689e-03 std=1.120188e-03
+  E245         type=eeg      min=-6.916542e-03 max=4.909039e-04 mean=-5.258130e-03 std=1.317669e-03
+  E246         type=eeg      min=-1.097094e-02 max=-3.017203e-03 mean=-8.688855e-03 std=1.546258e-03
+  E247         type=eeg      min=-6.922794e-03 max=-5.056846e-03 mean=-5.918493e-03 std=2.873182e-04
+  E248         type=eeg      min=-1.777577e-03 max=1.284189e-02 mean=-6.073733e-04 std=9.175716e-04
+  E249         type=eeg      min=-1.023386e-02 max=8.886239e-03 mean=-8.474266e-03 std=1.517063e-03
+  E250         type=eeg      min=-1.666944e-02 max=2.802016e-02 mean=-1.497179e-02 std=2.756001e-03
+  E251         type=eeg      min=-1.693875e-02 max=-1.357919e-02 mean=-1.599265e-02 std=8.169924e-04
+  E252         type=eeg      min=-4.622763e-03 max=-2.086956e-03 mean=-3.878441e-03 std=3.386764e-04
+  E253         type=eeg      min=1.772104e-01 max=2.216968e-01 mean=2.183633e-01 std=8.632101e-03
+  E254         type=eeg      min=-1.589791e-02 max=-1.207362e-02 mean=-1.393634e-02 std=1.052026e-03
+  E255         type=eeg      min=-1.992869e-02 max=-1.648412e-02 mean=-1.839762e-02 std=5.004567e-04
+  E256         type=eeg      min=2.215768e-01 max=2.215768e-01 mean=2.215768e-01 std=0.000000e+00
+
+==========================================================================================
+RECORDING 1: BRAinDECODE ENTRY
+==========================================================================================
+Entry class                   : EEGDashRaw
+Entry length                  : <bound method EEGDashRaw.__len__ of <EEGDashRaw | 256 ch (EEG) | 500.0 Hz | 139705 samples (279.4 s)>
+  description: subject=1011, task=rest, age=21.0, sex=F, session=None, run=None, gender=None
+  (Data not loaded yet — info derived from record metadata.)>
+Description                   : subject    1011
+task       rest
+age        21.0
+sex           F
+session    None
+run        None
+gender     None
+dtype: object
+
+Entry attributes:
+['bids_root', 'bidspath', 'cache_dir', 'description', 'filecache', 'raw', 'raw_preproc_kwargs', 'record', 'return_ch_pos', 's3file', 'set_description', 'target_name', 'transform']
+
+==========================================================================================
+RECORDING 1: MNE INFORMATION
+==========================================================================================
+Python type                   : RawEEGLAB
+Number of channels            : 256
+Sampling frequency (Hz)       : 500.0
+Number of samples             : 139706
+Duration (seconds)            : 279.41
+First sample                  : 0
+Last sample                   : 139705
+Measurement date              : None
+Channel names                 : ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10', 'E11', 'E12', 'E13', 'E14', 'E15', 'E16', 'E17', 'E18', 'E19', 'E20', 'E21', 'E22', 'E23', 'E24', 'E25', 'E26', 'E27', 'E28', 'E29', 'E30', 'E31', 'E32', 'E33', 'E34', 'E35', 'E36', 'E37', 'E38', 'E39', 'E40', 'E41', 'E42', 'E43', 'E44', 'E45', 'E46', 'E47', 'E48', 'E49', 'E50', 'E51', 'E52', 'E53', 'E54', 'E55', 'E56', 'E57', 'E58', 'E59', 'E60', 'E61', 'E62', 'E63', 'E64', 'E65', 'E66', 'E67', 'E68', 'E69', 'E70', 'E71', 'E72', 'E73', 'E74', 'E75', 'E76', 'E77', 'E78', 'E79', 'E80', 'E81', 'E82', 'E83', 'E84', 'E85', 'E86', 'E87', 'E88', 'E89', 'E90', 'E91', 'E92', 'E93', 'E94', 'E95', 'E96', 'E97', 'E98', 'E99', 'E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E107', 'E108', 'E109', 'E110', 'E111', 'E112', 'E113', 'E114', 'E115', 'E116', 'E117', 'E118', 'E119', 'E120', 'E121', 'E122', 'E123', 'E124', 'E125', 'E126', 'E127', 'E128', 'E129', 'E130', 'E131', 'E132', 'E133', 'E134', 'E135', 'E136', 'E137', 'E138', 'E139', 'E140', 'E141', 'E142', 'E143', 'E144', 'E145', 'E146', 'E147', 'E148', 'E149', 'E150', 'E151', 'E152', 'E153', 'E154', 'E155', 'E156', 'E157', 'E158', 'E159', 'E160', 'E161', 'E162', 'E163', 'E164', 'E165', 'E166', 'E167', 'E168', 'E169', 'E170', 'E171', 'E172', 'E173', 'E174', 'E175', 'E176', 'E177', 'E178', 'E179', 'E180', 'E181', 'E182', 'E183', 'E184', 'E185', 'E186', 'E187', 'E188', 'E189', 'E190', 'E191', 'E192', 'E193', 'E194', 'E195', 'E196', 'E197', 'E198', 'E199', 'E200', 'E201', 'E202', 'E203', 'E204', 'E205', 'E206', 'E207', 'E208', 'E209', 'E210', 'E211', 'E212', 'E213', 'E214', 'E215', 'E216', 'E217', 'E218', 'E219', 'E220', 'E221', 'E222', 'E223', 'E224', 'E225', 'E226', 'E227', 'E228', 'E229', 'E230', 'E231', 'E232', 'E233', 'E234', 'E235', 'E236', 'E237', 'E238', 'E239', 'E240', 'E241', 'E242', 'E243', 'E244', 'E245', 'E246', 'E247', 'E248', 'E249', 'E250', 'E251', 'E252', 'E253', 'E254', 'E255', 'E256']
+
+Full MNE Info:
+<Info | 10 non-empty values
+ bads: []
+ ch_names: E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12, E13, E14, ...
+ chs: 256 EEG
+ custom_ref_applied: False
+ dig: 259 items (3 Cardinal, 256 EEG)
+ highpass: 0.0 Hz
+ line_freq: 60.0
+ lowpass: 250.0 Hz
+ meas_date: unspecified
+ nchan: 256
+ projs: []
+ sfreq: 500.0 Hz
+ subject_info: <subject_info | >
+>
+
+Channel types:
+['eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg']
+
+Channel counts by type:
+  eeg: 256
+
+Montage:
+<DigMontage | 0 extras (headshape), 0 HPIs, 3 fiducials, 256 channels>
+
+Annotations:
+  onset  duration description
+ 33.434    59.982   eyes_open
+ 93.416    60.000 eyes_closed
+153.416    59.998   eyes_open
+213.414    65.996 eyes_closed
+
+Events derived from annotations:
+Event count                   : 4
+Event IDs                     : {'eyes_closed': 1, 'eyes_open': 2}
+First 20 events [sample, previous value, event ID]:
+[[ 16717      0      2]
+ [ 46708      0      1]
+ [ 76708      0      2]
+ [106707      0      1]]
+
+Signal statistics:
+  E1           type=eeg      min=-1.274264e-02 max=-1.120796e-02 mean=-1.229248e-02 std=2.447553e-04
+  E2           type=eeg      min=-1.661888e-02 max=-1.521211e-02 mean=-1.628129e-02 std=2.123609e-04
+  E3           type=eeg      min=-1.352848e-02 max=-1.224274e-02 mean=-1.326206e-02 std=1.500196e-04
+  E4           type=eeg      min=-1.430184e-02 max=-1.280108e-02 mean=-1.387644e-02 std=1.975873e-04
+  E5           type=eeg      min=-1.074841e-02 max=-9.335852e-03 mean=-1.050271e-02 std=1.323151e-04
+  E6           type=eeg      min=-8.846970e-03 max=-7.314945e-03 mean=-8.522247e-03 std=1.449790e-04
+  E7           type=eeg      min=-5.041883e-03 max=-3.683837e-03 mean=-4.743728e-03 std=1.671032e-04
+  E8           type=eeg      min=-2.335903e-03 max=1.616150e-04 mean=-1.830749e-03 std=4.581699e-04
+  E9           type=eeg      min=-3.499799e-03 max=-8.252149e-04 mean=-1.915693e-03 std=7.051823e-04
+  E10          type=eeg      min=-1.185584e-02 max=-9.613855e-03 mean=-1.042418e-02 std=2.413494e-04
+  E11          type=eeg      min=-9.553359e-03 max=-7.664413e-03 mean=-8.674904e-03 std=2.940584e-04
+  E12          type=eeg      min=-1.104272e-02 max=-9.183239e-03 mean=-1.016898e-02 std=3.806596e-04
+  E13          type=eeg      min=-1.147820e-02 max=-9.875173e-03 mean=-1.110685e-02 std=1.646336e-04
+  E14          type=eeg      min=-7.651116e-03 max=-5.944028e-03 mean=-7.237188e-03 std=1.788390e-04
+  E15          type=eeg      min=-5.552700e-03 max=-4.324765e-03 mean=-5.272926e-03 std=1.153985e-04
+  E16          type=eeg      min=-5.274884e-03 max=-3.750206e-03 mean=-4.753262e-03 std=1.314315e-04
+  E17          type=eeg      min=-7.482578e-03 max=-5.893797e-03 mean=-7.042601e-03 std=2.612860e-04
+  E18          type=eeg      min=-5.028790e-03 max=-3.963007e-05 mean=-3.384779e-03 std=9.011686e-04
+  E19          type=eeg      min=-1.066634e-02 max=-7.268369e-03 mean=-9.749922e-03 std=5.599836e-04
+  E20          type=eeg      min=-9.848029e-03 max=-8.398048e-03 mean=-9.190655e-03 std=2.922027e-04
+  E21          type=eeg      min=-1.015533e-02 max=-7.910444e-03 mean=-9.479848e-03 std=4.195011e-04
+  E22          type=eeg      min=-5.798798e-03 max=-4.120376e-03 mean=-5.382696e-03 std=2.682644e-04
+  E23          type=eeg      min=-2.565336e-03 max=-6.130839e-04 mean=-1.710627e-03 std=2.760861e-04
+  E24          type=eeg      min=-2.130596e-03 max=-6.471381e-04 mean=-1.805804e-03 std=1.403466e-04
+  E25          type=eeg      min=-1.361622e-02 max=-1.045432e-02 mean=-1.239190e-02 std=6.907092e-04
+  E26          type=eeg      min=-1.219334e-02 max=-1.000862e-02 mean=-1.157793e-02 std=3.179040e-04
+  E27          type=eeg      min=-1.018866e-02 max=-8.688791e-03 mean=-9.555046e-03 std=2.254373e-04
+  E28          type=eeg      min=-1.235157e-02 max=-1.045672e-02 mean=-1.193156e-02 std=2.003257e-04
+  E29          type=eeg      min=-7.909755e-03 max=-5.807995e-03 mean=-7.305097e-03 std=3.464012e-04
+  E30          type=eeg      min=-5.773745e-03 max=-3.720426e-03 mean=-5.192193e-03 std=2.210076e-04
+  E31          type=eeg      min=-2.021833e-02 max=-1.745324e-02 mean=-1.929248e-02 std=5.030479e-04
+  E32          type=eeg      min=-1.569999e-02 max=-1.390574e-02 mean=-1.514200e-02 std=3.070752e-04
+  E33          type=eeg      min=-1.067383e-02 max=-7.741323e-03 mean=-9.540407e-03 std=6.334722e-04
+  E34          type=eeg      min=-1.552169e-02 max=-1.256136e-02 mean=-1.448998e-02 std=6.238366e-04
+  E35          type=eeg      min=-1.369366e-02 max=-1.141047e-02 mean=-1.281589e-02 std=4.284716e-04
+  E36          type=eeg      min=-8.125969e-03 max=-6.185705e-03 mean=-7.503706e-03 std=3.310909e-04
+  E37          type=eeg      min=-9.921086e-03 max=-4.611630e-03 mean=-7.911596e-03 std=1.240167e-03
+  E38          type=eeg      min=-1.126152e-02 max=-7.320969e-03 mean=-9.359731e-03 std=8.506390e-04
+  E39          type=eeg      min=-1.406737e-02 max=-1.158255e-02 mean=-1.296702e-02 std=5.220796e-04
+  E40          type=eeg      min=-1.164137e-02 max=-1.007391e-02 mean=-1.117949e-02 std=2.440211e-04
+  E41          type=eeg      min=-9.718571e-03 max=-8.246592e-03 mean=-9.324484e-03 std=1.978694e-04
+  E42          type=eeg      min=-9.298182e-03 max=-7.888935e-03 mean=-8.938265e-03 std=1.738683e-04
+  E43          type=eeg      min=-9.473324e-03 max=-8.086377e-03 mean=-9.157188e-03 std=1.384891e-04
+  E44          type=eeg      min=-7.672673e-03 max=-6.320371e-03 mean=-7.305914e-03 std=1.846350e-04
+  E45          type=eeg      min=-5.547679e-03 max=-4.154084e-03 mean=-5.252423e-03 std=1.252524e-04
+  E46          type=eeg      min=-3.287568e-03 max=8.478695e-04 mean=-2.125977e-03 std=7.715604e-04
+  E47          type=eeg      min=-1.218960e-02 max=-1.048880e-02 mean=-1.161634e-02 std=2.505336e-04
+  E48          type=eeg      min=-9.540476e-03 max=-8.179751e-03 mean=-9.178803e-03 std=1.584608e-04
+  E49          type=eeg      min=-1.003176e-02 max=-8.631809e-03 mean=-9.709639e-03 std=1.340456e-04
+  E50          type=eeg      min=-9.286259e-03 max=-7.878446e-03 mean=-8.987777e-03 std=1.282666e-04
+  E51          type=eeg      min=-8.575104e-03 max=-7.181524e-03 mean=-8.274363e-03 std=1.311335e-04
+  E52          type=eeg      min=-8.814180e-03 max=-7.420650e-03 mean=-8.517231e-03 std=1.428893e-04
+  E53          type=eeg      min=-4.082225e-03 max=-2.570178e-03 mean=-3.830939e-03 std=1.042778e-04
+  E54          type=eeg      min=-8.961661e-03 max=-7.395740e-03 mean=-8.468634e-03 std=2.389167e-04
+  E55          type=eeg      min=-9.002535e-03 max=-7.569184e-03 mean=-8.676793e-03 std=1.176722e-04
+  E56          type=eeg      min=-8.398221e-03 max=-6.993061e-03 mean=-8.083775e-03 std=1.347902e-04
+  E57          type=eeg      min=-8.449192e-03 max=-7.056897e-03 mean=-8.166397e-03 std=1.366844e-04
+  E58          type=eeg      min=-7.899469e-03 max=-6.483891e-03 mean=-7.644011e-03 std=9.994067e-05
+  E59          type=eeg      min=-6.812350e-03 max=-5.444759e-03 mean=-6.533772e-03 std=1.251067e-04
+  E60          type=eeg      min=-5.793084e-03 max=-4.392836e-03 mean=-5.599188e-03 std=9.756124e-05
+  E61          type=eeg      min=-9.085291e-03 max=-7.486101e-03 mean=-8.818614e-03 std=1.222973e-04
+  E62          type=eeg      min=-7.038160e-03 max=-5.527281e-03 mean=-6.658632e-03 std=1.595683e-04
+  E63          type=eeg      min=-1.003142e-02 max=-8.536460e-03 mean=-9.708937e-03 std=1.284827e-04
+  E64          type=eeg      min=-8.380174e-03 max=-6.996833e-03 mean=-8.070051e-03 std=1.702139e-04
+  E65          type=eeg      min=-6.768471e-03 max=-5.271494e-03 mean=-6.551053e-03 std=9.157385e-05
+  E66          type=eeg      min=-6.886564e-03 max=-5.463219e-03 mean=-6.633196e-03 std=1.085946e-04
+  E67          type=eeg      min=-1.116318e-02 max=-9.216964e-03 mean=-1.081660e-02 std=1.802642e-04
+  E68          type=eeg      min=-1.161937e-02 max=-9.823304e-03 mean=-1.119150e-02 std=1.785444e-04
+  E69          type=eeg      min=-1.085899e-02 max=-9.104991e-03 mean=-1.032846e-02 std=1.820461e-04
+  E70          type=eeg      min=-1.136233e-02 max=-9.802513e-03 mean=-1.088237e-02 std=2.284337e-04
+  E71          type=eeg      min=-1.027539e-02 max=-8.869379e-03 mean=-1.003215e-02 std=1.295299e-04
+  E72          type=eeg      min=-1.127690e-02 max=-9.896420e-03 mean=-1.101697e-02 std=1.334243e-04
+  E73          type=eeg      min=-1.112147e-02 max=-9.500220e-03 mean=-1.082990e-02 std=1.692889e-04
+  E74          type=eeg      min=-1.152975e-02 max=-1.004774e-02 mean=-1.133017e-02 std=9.259621e-05
+  E75          type=eeg      min=-1.167751e-02 max=-1.021699e-02 mean=-1.148690e-02 std=9.537284e-05
+  E76          type=eeg      min=-9.747392e-03 max=-7.903046e-03 mean=-9.398632e-03 std=1.602774e-04
+  E77          type=eeg      min=-8.560282e-03 max=-6.841954e-03 mean=-8.293116e-03 std=1.403437e-04
+  E78          type=eeg      min=-6.699295e-03 max=-4.959858e-03 mean=-6.395376e-03 std=1.256743e-04
+  E79          type=eeg      min=-8.170839e-03 max=-6.591170e-03 mean=-7.913658e-03 std=8.788979e-05
+  E80          type=eeg      min=-4.534623e-03 max=-2.586343e-03 mean=-3.910219e-03 std=2.377127e-04
+  E81          type=eeg      min=-1.369420e-03 max=2.691208e-03 mean=-1.870165e-04 std=6.489793e-04
+  E82          type=eeg      min=-7.304328e-03 max=-5.140283e-03 mean=-6.791236e-03 std=3.934309e-04
+  E83          type=eeg      min=-1.085950e-02 max=-9.430856e-03 mean=-1.053541e-02 std=1.654758e-04
+  E84          type=eeg      min=-1.106997e-02 max=-9.645624e-03 mean=-1.076849e-02 std=1.528090e-04
+  E85          type=eeg      min=-9.803286e-03 max=-8.333244e-03 mean=-9.564313e-03 std=1.350286e-04
+  E86          type=eeg      min=-7.047798e-03 max=-5.644203e-03 mean=-6.781569e-03 std=1.650213e-04
+  E87          type=eeg      min=-9.108639e-03 max=-7.683005e-03 mean=-8.859919e-03 std=1.545309e-04
+  E88          type=eeg      min=-8.255690e-03 max=-6.799781e-03 mean=-8.052211e-03 std=1.280173e-04
+  E89          type=eeg      min=-6.949378e-03 max=-5.513472e-03 mean=-6.659397e-03 std=1.553500e-04
+  E90          type=eeg      min=-1.151665e-02 max=-8.358078e-03 mean=-1.060082e-02 std=2.832785e-04
+  E91          type=eeg      min=-2.783705e-02 max=2.209506e-01 mean=2.197358e-01 std=1.676414e-02
+  E92          type=eeg      min=-1.619276e-02 max=-1.249862e-02 mean=-1.512252e-02 std=7.517395e-04
+  E93          type=eeg      min=-1.661535e-02 max=-1.431988e-02 mean=-1.598231e-02 std=4.516342e-04
+  E94          type=eeg      min=-1.565176e-02 max=-1.347970e-02 mean=-1.502264e-02 std=4.253674e-04
+  E95          type=eeg      min=-1.516639e-02 max=-1.308561e-02 mean=-1.453724e-02 std=4.179333e-04
+  E96          type=eeg      min=-1.039941e-02 max=-8.917181e-03 mean=-1.017807e-02 std=1.548076e-04
+  E97          type=eeg      min=-9.672014e-03 max=-8.148734e-03 mean=-9.466919e-03 std=1.524874e-04
+  E98          type=eeg      min=-1.011369e-02 max=-8.626061e-03 mean=-9.858852e-03 std=1.543007e-04
+  E99          type=eeg      min=-7.626770e-03 max=-6.105607e-03 mean=-7.418210e-03 std=9.399122e-05
+  E100         type=eeg      min=-7.429374e-03 max=-5.987120e-03 mean=-7.014703e-03 std=2.341420e-04
+  E101         type=eeg      min=-8.664354e-03 max=-6.442883e-03 mean=-7.838699e-03 std=1.994436e-04
+  E102         type=eeg      min=-2.343977e-02 max=-1.968499e-02 mean=-2.248816e-02 std=7.201427e-04
+  E103         type=eeg      min=-1.707590e-02 max=-1.431468e-02 mean=-1.620617e-02 std=6.075859e-04
+  E104         type=eeg      min=-1.455608e-02 max=-1.264502e-02 mean=-1.406069e-02 std=3.389103e-04
+  E105         type=eeg      min=-1.413632e-02 max=-1.247494e-02 mean=-1.373165e-02 std=2.695297e-04
+  E106         type=eeg      min=-1.104004e-02 max=-9.565432e-03 mean=-1.072500e-02 std=2.114645e-04
+  E107         type=eeg      min=-1.031404e-02 max=-8.850939e-03 mean=-1.002536e-02 std=1.815246e-04
+  E108         type=eeg      min=-7.351021e-03 max=-5.903358e-03 mean=-7.073593e-03 std=1.848678e-04
+  E109         type=eeg      min=-6.190535e-03 max=-4.772450e-03 mean=-5.923652e-03 std=1.609398e-04
+  E110         type=eeg      min=-5.462813e-03 max=-4.023004e-03 mean=-5.248758e-03 std=1.290974e-04
+  E111         type=eeg      min=-1.815112e-02 max=-1.655465e-02 mean=-1.777675e-02 std=2.357395e-04
+  E112         type=eeg      min=-1.743229e-02 max=-1.578704e-02 mean=-1.705102e-02 std=2.472690e-04
+  E113         type=eeg      min=-1.237751e-02 max=-1.092667e-02 mean=-1.213511e-02 std=1.597638e-04
+  E114         type=eeg      min=-1.171701e-02 max=-1.026246e-02 mean=-1.136696e-02 std=2.341649e-04
+  E115         type=eeg      min=-9.845876e-03 max=-8.049717e-03 mean=-9.359586e-03 std=2.070357e-04
+  E116         type=eeg      min=-1.034350e-02 max=-8.380328e-03 mean=-9.786793e-03 std=2.435980e-04
+  E117         type=eeg      min=-9.379089e-03 max=-7.320938e-03 mean=-8.766373e-03 std=2.244441e-04
+  E118         type=eeg      min=-1.096115e-02 max=-8.841574e-03 mean=-1.033362e-02 std=2.100073e-04
+  E119         type=eeg      min=-8.031710e-03 max=-5.945902e-03 mean=-7.352490e-03 std=1.734502e-04
+  E120         type=eeg      min=-1.840438e-02 max=-1.408731e-02 mean=-1.800486e-02 std=2.879484e-04
+  E121         type=eeg      min=-1.661049e-02 max=-1.350695e-02 mean=-1.604974e-02 std=3.232656e-04
+  E122         type=eeg      min=-1.405722e-02 max=-1.233383e-02 mean=-1.368169e-02 std=1.673871e-04
+  E123         type=eeg      min=-1.290425e-02 max=-1.118818e-02 mean=-1.252262e-02 std=1.607907e-04
+  E124         type=eeg      min=-9.732486e-03 max=-7.809708e-03 mean=-9.273909e-03 std=1.585675e-04
+  E125         type=eeg      min=-1.064117e-02 max=-8.207833e-03 mean=-9.925126e-03 std=2.601571e-04
+  E126         type=eeg      min=-1.037780e-02 max=-7.769157e-03 mean=-9.562758e-03 std=2.735885e-04
+  E127         type=eeg      min=-1.595942e-02 max=-1.179442e-02 mean=-1.429590e-02 std=3.232493e-04
+  E128         type=eeg      min=-1.949053e-02 max=-1.455374e-02 mean=-1.692320e-02 std=4.270324e-04
+  E129         type=eeg      min=-1.653666e-02 max=-1.346337e-02 mean=-1.558249e-02 std=3.312873e-04
+  E130         type=eeg      min=-8.942213e-03 max=-6.746751e-03 mean=-8.417547e-03 std=2.337120e-04
+  E131         type=eeg      min=1.337851e-03 max=6.197352e-03 mean=2.477255e-03 std=9.436623e-04
+  E132         type=eeg      min=-1.188298e-03 max=1.397518e-04 mean=-7.711105e-04 std=9.536791e-05
+  E133         type=eeg      min=-2.733200e-02 max=2.284761e-01 mean=-2.399927e-02 std=9.021284e-03
+  E134         type=eeg      min=-1.555156e-02 max=-1.349112e-02 mean=-1.499665e-02 std=1.897243e-04
+  E135         type=eeg      min=-1.920489e-02 max=-1.665287e-02 mean=-1.851480e-02 std=2.780676e-04
+  E136         type=eeg      min=-1.443113e-02 max=-1.172486e-02 mean=-1.366762e-02 std=2.516653e-04
+  E137         type=eeg      min=-1.324887e-02 max=-9.763684e-03 mean=-1.229391e-02 std=2.786072e-04
+  E138         type=eeg      min=-1.330661e-02 max=-8.920373e-03 mean=-1.186501e-02 std=3.463127e-04
+  E139         type=eeg      min=-1.368893e-02 max=-9.579324e-03 mean=-1.226464e-02 std=2.903981e-04
+  E140         type=eeg      min=-1.239273e-02 max=-9.207447e-03 mean=-1.136380e-02 std=2.264087e-04
+  E141         type=eeg      min=-7.064622e-03 max=-4.913951e-03 mean=-6.487689e-03 std=2.347536e-04
+  E142         type=eeg      min=-6.869217e-03 max=-4.954995e-03 mean=-6.522750e-03 std=1.536382e-04
+  E143         type=eeg      min=1.876346e-03 max=5.910254e-03 mean=3.226637e-03 std=8.490068e-04
+  E144         type=eeg      min=7.451465e-04 max=3.267717e-03 mean=1.210507e-03 std=4.300545e-04
+  E145         type=eeg      min=2.220057e-01 max=2.220057e-01 mean=2.220057e-01 std=0.000000e+00
+  E146         type=eeg      min=-1.988003e-02 max=-1.754009e-02 mean=-1.939376e-02 std=2.187745e-04
+  E147         type=eeg      min=-1.963849e-02 max=-1.589985e-02 mean=-1.880206e-02 std=2.563787e-04
+  E148         type=eeg      min=-1.665798e-02 max=-1.200944e-02 mean=-1.564314e-02 std=2.046070e-04
+  E149         type=eeg      min=-1.603348e-02 max=-1.142004e-02 mean=-1.483199e-02 std=2.793209e-04
+  E150         type=eeg      min=-1.079251e-02 max=-7.633885e-03 mean=-9.985690e-03 std=2.294930e-04
+  E151         type=eeg      min=-8.977044e-03 max=-6.586515e-03 mean=-8.414719e-03 std=1.906055e-04
+  E152         type=eeg      min=-6.936234e-03 max=-5.138299e-03 mean=-6.646969e-03 std=1.526577e-04
+  E153         type=eeg      min=-1.838442e-03 max=1.518566e-04 mean=-1.503770e-03 std=1.713281e-04
+  E154         type=eeg      min=-2.414749e-03 max=3.301866e-04 mean=-1.702351e-03 std=4.453920e-04
+  E155         type=eeg      min=-4.041133e-04 max=2.936348e-03 mean=5.474636e-04 std=6.171466e-04
+  E156         type=eeg      min=-2.115592e-02 max=-1.568069e-02 mean=-1.995841e-02 std=2.134249e-04
+  E157         type=eeg      min=-1.768244e-02 max=-1.193409e-02 mean=-1.658815e-02 std=1.590175e-04
+  E158         type=eeg      min=-1.557247e-02 max=-1.140554e-02 mean=-1.456359e-02 std=2.442287e-04
+  E159         type=eeg      min=-1.218281e-02 max=-9.351855e-03 mean=-1.145124e-02 std=2.169408e-04
+  E160         type=eeg      min=-7.872454e-03 max=-6.223836e-03 mean=-7.482277e-03 std=2.810527e-04
+  E161         type=eeg      min=-7.281301e-03 max=-5.685202e-03 mean=-7.014211e-03 std=2.029143e-04
+  E162         type=eeg      min=-6.802336e-03 max=-5.130068e-03 mean=-6.533845e-03 std=1.375993e-04
+  E163         type=eeg      min=-2.367023e-03 max=-7.532690e-05 mean=-1.795287e-03 std=2.569801e-04
+  E164         type=eeg      min=-4.451958e-03 max=-2.326839e-03 mean=-4.023473e-03 std=2.608517e-04
+  E165         type=eeg      min=-3.580304e-02 max=2.321952e-01 mean=-2.298521e-02 std=1.333067e-02
+  E166         type=eeg      min=-2.158348e-02 max=-1.773795e-02 mean=-2.079197e-02 std=1.501647e-04
+  E167         type=eeg      min=-1.460388e-02 max=-1.175796e-02 mean=-1.390488e-02 std=2.057560e-04
+  E168         type=eeg      min=-7.702634e-03 max=-5.955237e-03 mean=-7.414585e-03 std=2.038789e-04
+  E169         type=eeg      min=-1.014177e-02 max=-8.518821e-03 mean=-9.726552e-03 std=2.783013e-04
+  E170         type=eeg      min=-9.651190e-03 max=-8.087413e-03 mean=-9.351458e-03 std=2.441641e-04
+  E171         type=eeg      min=-8.623152e-03 max=-7.168962e-03 mean=-8.345542e-03 std=1.805446e-04
+  E172         type=eeg      min=-4.875172e-03 max=-2.979839e-03 mean=-4.562094e-03 std=1.902626e-04
+  E173         type=eeg      min=-6.594307e-03 max=-4.903314e-03 mean=-6.365812e-03 std=1.444706e-04
+  E174         type=eeg      min=-2.422950e-02 max=-2.021548e-02 mean=-2.353229e-02 std=2.319818e-04
+  E175         type=eeg      min=-1.419333e-02 max=-1.161448e-02 mean=-1.357606e-02 std=1.729368e-04
+  E176         type=eeg      min=-1.069284e-02 max=-9.013495e-03 mean=-1.035638e-02 std=2.838494e-04
+  E177         type=eeg      min=-1.021387e-02 max=-8.755749e-03 mean=-9.845424e-03 std=2.161828e-04
+  E178         type=eeg      min=-1.207281e-02 max=-9.089693e-03 mean=-1.082774e-02 std=2.987549e-04
+  E179         type=eeg      min=-5.195825e-03 max=-3.733255e-03 mean=-4.857260e-03 std=2.279213e-04
+  E180         type=eeg      min=-6.388497e-03 max=-4.674594e-03 mean=-6.123104e-03 std=1.382607e-04
+  E181         type=eeg      min=-5.994756e-03 max=-4.438877e-03 mean=-5.798519e-03 std=1.191166e-04
+  E182         type=eeg      min=-4.453791e-03 max=-2.134516e-03 mean=-3.864583e-03 std=2.854248e-04
+  E183         type=eeg      min=-5.470426e-03 max=-4.039272e-03 mean=-5.286577e-03 std=1.013136e-04
+  E184         type=eeg      min=-6.274651e-03 max=-4.805897e-03 mean=-6.062558e-03 std=1.449155e-04
+  E185         type=eeg      min=-3.948922e-03 max=-2.573789e-03 mean=-3.745051e-03 std=1.597247e-04
+  E186         type=eeg      min=-4.021484e-03 max=-2.552894e-03 mean=-3.797423e-03 std=1.794465e-04
+  E187         type=eeg      min=-1.963064e-02 max=-1.607041e-02 mean=-1.873086e-02 std=1.529531e-04
+  E188         type=eeg      min=-1.390920e-02 max=-9.987016e-03 mean=-1.278389e-02 std=9.118519e-04
+  E189         type=eeg      min=-1.016424e-02 max=-8.612721e-03 mean=-9.851037e-03 std=1.683167e-04
+  E190         type=eeg      min=-1.398492e-02 max=-1.241797e-02 mean=-1.367247e-02 std=1.268880e-04
+  E191         type=eeg      min=-7.970379e-03 max=-6.383240e-03 mean=-7.683027e-03 std=1.755542e-04
+  E192         type=eeg      min=-7.376320e-03 max=-5.725753e-03 mean=-6.654428e-03 std=3.230721e-04
+  E193         type=eeg      min=-9.073310e-03 max=-7.771218e-03 mean=-8.764666e-03 std=2.164724e-04
+  E194         type=eeg      min=-7.008438e-03 max=-5.541186e-03 mean=-6.812759e-03 std=1.207480e-04
+  E195         type=eeg      min=-8.462432e-03 max=-7.071146e-03 mean=-8.251971e-03 std=1.073379e-04
+  E196         type=eeg      min=-6.573399e-03 max=-5.275402e-03 mean=-6.386619e-03 std=9.738343e-05
+  E197         type=eeg      min=-5.871845e-03 max=-4.521797e-03 mean=-5.702057e-03 std=1.220446e-04
+  E198         type=eeg      min=-2.880392e-03 max=-1.750834e-03 mean=-2.626315e-03 std=9.433980e-05
+  E199         type=eeg      min=-1.673899e-02 max=-1.283523e-02 mean=-1.564601e-02 std=9.063185e-04
+  E200         type=eeg      min=-1.586224e-02 max=-1.242659e-02 mean=-1.544902e-02 std=4.165905e-04
+  E201         type=eeg      min=-1.630995e-02 max=-1.474657e-02 mean=-1.599450e-02 std=1.360791e-04
+  E202         type=eeg      min=-8.139062e-03 max=-6.298344e-03 mean=-7.623370e-03 std=3.875333e-04
+  E203         type=eeg      min=-9.084206e-03 max=-7.728590e-03 mean=-8.794614e-03 std=1.863686e-04
+  E204         type=eeg      min=-7.630003e-03 max=-6.314421e-03 mean=-7.375222e-03 std=1.424146e-04
+  E205         type=eeg      min=-7.142536e-03 max=-5.833526e-03 mean=-6.931326e-03 std=1.256366e-04
+  E206         type=eeg      min=-8.157552e-03 max=-6.901374e-03 mean=-7.953016e-03 std=1.039016e-04
+  E207         type=eeg      min=-7.182637e-03 max=-5.922477e-03 mean=-6.964828e-03 std=1.063626e-04
+  E208         type=eeg      min=-2.000187e-02 max=-1.695527e-02 mean=-1.950032e-02 std=4.395890e-04
+  E209         type=eeg      min=-2.004030e-02 max=-3.862621e-03 mean=-1.430657e-02 std=4.113916e-03
+  E210         type=eeg      min=-1.028973e-02 max=-7.997031e-03 mean=-9.772534e-03 std=2.008583e-04
+  E211         type=eeg      min=-6.664583e-03 max=-5.287619e-03 mean=-6.447747e-03 std=1.124991e-04
+  E212         type=eeg      min=-7.309509e-03 max=-5.982447e-03 mean=-7.043983e-03 std=1.576844e-04
+  E213         type=eeg      min=-9.638408e-03 max=-8.377234e-03 mean=-9.393929e-03 std=1.515131e-04
+  E214         type=eeg      min=-1.073578e-02 max=-9.527417e-03 mean=-1.048470e-02 std=1.480125e-04
+  E215         type=eeg      min=-1.031568e-02 max=-9.077411e-03 mean=-1.010842e-02 std=1.017389e-04
+  E216         type=eeg      min=-2.428417e-02 max=-1.934374e-02 mean=-2.262486e-02 std=1.097203e-03
+  E217         type=eeg      min=-1.348815e-02 max=-1.151225e-02 mean=-1.276612e-02 std=4.105285e-04
+  E218         type=eeg      min=-1.589522e-02 max=2.337411e-01 mean=2.178444e-01 std=2.937109e-02
+  E219         type=eeg      min=-4.634129e-03 max=1.484542e-04 mean=-3.728692e-03 std=2.216850e-04
+  E220         type=eeg      min=-9.709262e-03 max=-7.876262e-03 mean=-9.159506e-03 std=3.919918e-04
+  E221         type=eeg      min=-1.192839e-02 max=-1.063201e-02 mean=-1.166594e-02 std=1.598973e-04
+  E222         type=eeg      min=-1.158645e-02 max=-1.031982e-02 mean=-1.126430e-02 std=2.024877e-04
+  E223         type=eeg      min=-1.176218e-02 max=-1.053013e-02 mean=-1.152933e-02 std=1.292644e-04
+  E224         type=eeg      min=-1.037182e-02 max=-9.189864e-03 mean=-1.014006e-02 std=1.339295e-04
+  E225         type=eeg      min=-7.900211e-03 max=-5.915438e-03 mean=-7.319776e-03 std=3.443617e-04
+  E226         type=eeg      min=-8.084861e-03 max=-6.648574e-03 mean=-7.720990e-03 std=1.952884e-04
+  E227         type=eeg      min=-6.214522e-03 max=-6.297489e-04 mean=-4.167016e-03 std=1.320515e-03
+  E228         type=eeg      min=-8.848688e-03 max=-5.181886e-03 mean=-8.116841e-03 std=7.213097e-04
+  E229         type=eeg      min=-1.439682e-02 max=2.310640e-01 mean=2.450067e-02 std=8.628727e-02
+  E230         type=eeg      min=-1.041971e-02 max=-8.905222e-03 mean=-9.971423e-03 std=2.442745e-04
+  E231         type=eeg      min=-1.435555e-02 max=-8.827331e-03 mean=-1.280809e-02 std=1.307216e-03
+  E232         type=eeg      min=-1.224602e-02 max=-1.056918e-02 mean=-1.168728e-02 std=3.664676e-04
+  E233         type=eeg      min=-1.020114e-02 max=-4.523108e-03 mean=-8.468210e-03 std=1.522216e-03
+  E234         type=eeg      min=-9.932603e-03 max=-8.486471e-03 mean=-9.457758e-03 std=2.641283e-04
+  E235         type=eeg      min=-1.987171e-02 max=-1.632043e-02 mean=-1.897976e-02 std=9.022890e-04
+  E236         type=eeg      min=-1.601083e-02 max=-1.440397e-02 mean=-1.563358e-02 std=1.942200e-04
+  E237         type=eeg      min=-1.625259e-02 max=-1.396312e-02 mean=-1.563180e-02 std=5.548414e-04
+  E238         type=eeg      min=-1.084424e-02 max=-9.328969e-03 mean=-1.037998e-02 std=2.682612e-04
+  E239         type=eeg      min=-1.682265e-02 max=-1.477785e-02 mean=-1.620180e-02 std=4.398873e-04
+  E240         type=eeg      min=-1.503720e-02 max=-1.178506e-02 mean=-1.392852e-02 std=7.585344e-04
+  E241         type=eeg      min=-1.126436e-02 max=-9.317623e-03 mean=-1.079509e-02 std=1.704210e-04
+  E242         type=eeg      min=-1.055133e-02 max=-8.784749e-03 mean=-1.009249e-02 std=2.234308e-04
+  E243         type=eeg      min=-1.381002e-02 max=-1.118347e-02 mean=-1.300667e-02 std=3.737737e-04
+  E244         type=eeg      min=-1.273356e-02 max=-1.104003e-02 mean=-1.227537e-02 std=2.282301e-04
+  E245         type=eeg      min=-1.232861e-02 max=-1.034468e-02 mean=-1.173649e-02 std=3.205782e-04
+  E246         type=eeg      min=-1.666246e-02 max=-1.482624e-02 mean=-1.624495e-02 std=3.029636e-04
+  E247         type=eeg      min=-2.151103e-02 max=-1.817124e-02 mean=-2.057218e-02 std=7.886510e-04
+  E248         type=eeg      min=-1.378856e-02 max=-1.213661e-02 mean=-1.321826e-02 std=2.264216e-04
+  E249         type=eeg      min=-9.836343e-03 max=-7.931397e-03 mean=-9.402364e-03 std=2.530732e-04
+  E250         type=eeg      min=-1.461600e-02 max=-1.210989e-02 mean=-1.403877e-02 std=4.981142e-04
+  E251         type=eeg      min=8.563731e-02 max=1.846761e-01 mean=1.218203e-01 std=1.433382e-02
+  E252         type=eeg      min=-8.380047e-03 max=-6.477729e-03 mean=-7.720397e-03 std=2.832943e-04
+  E253         type=eeg      min=-1.207754e-02 max=-1.038429e-02 mean=-1.172304e-02 std=1.412094e-04
+  E254         type=eeg      min=-1.387266e-02 max=-1.230971e-02 mean=-1.352755e-02 std=2.231339e-04
+  E255         type=eeg      min=-8.917202e-03 max=-7.019378e-03 mean=-8.465156e-03 std=2.879015e-04
+  E256         type=eeg      min=-1.839107e-02 max=2.311757e-01 mean=1.847613e-01 std=8.149973e-02
+
+==========================================================================================
+RECORDING 2: BRAinDECODE ENTRY
+==========================================================================================
+Entry class                   : EEGDashRaw
+Entry length                  : <bound method EEGDashRaw.__len__ of <EEGDashRaw | 256 ch (EEG) | 500.0 Hz | 153980 samples (308.0 s)>
+  description: subject=1010, task=rest, age=18.0, sex=M, session=None, run=None, gender=None
+  (Data not loaded yet — info derived from record metadata.)>
+Description                   : subject    1010
+task       rest
+age        18.0
+sex           M
+session    None
+run        None
+gender     None
+dtype: object
+
+Entry attributes:
+['bids_root', 'bidspath', 'cache_dir', 'description', 'filecache', 'raw', 'raw_preproc_kwargs', 'record', 'return_ch_pos', 's3file', 'set_description', 'target_name', 'transform']
+
+==========================================================================================
+RECORDING 2: MNE INFORMATION
+==========================================================================================
+Python type                   : RawEEGLAB
+Number of channels            : 256
+Sampling frequency (Hz)       : 500.0
+Number of samples             : 153981
+Duration (seconds)            : 307.96
+First sample                  : 0
+Last sample                   : 153980
+Measurement date              : None
+Channel names                 : ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10', 'E11', 'E12', 'E13', 'E14', 'E15', 'E16', 'E17', 'E18', 'E19', 'E20', 'E21', 'E22', 'E23', 'E24', 'E25', 'E26', 'E27', 'E28', 'E29', 'E30', 'E31', 'E32', 'E33', 'E34', 'E35', 'E36', 'E37', 'E38', 'E39', 'E40', 'E41', 'E42', 'E43', 'E44', 'E45', 'E46', 'E47', 'E48', 'E49', 'E50', 'E51', 'E52', 'E53', 'E54', 'E55', 'E56', 'E57', 'E58', 'E59', 'E60', 'E61', 'E62', 'E63', 'E64', 'E65', 'E66', 'E67', 'E68', 'E69', 'E70', 'E71', 'E72', 'E73', 'E74', 'E75', 'E76', 'E77', 'E78', 'E79', 'E80', 'E81', 'E82', 'E83', 'E84', 'E85', 'E86', 'E87', 'E88', 'E89', 'E90', 'E91', 'E92', 'E93', 'E94', 'E95', 'E96', 'E97', 'E98', 'E99', 'E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E107', 'E108', 'E109', 'E110', 'E111', 'E112', 'E113', 'E114', 'E115', 'E116', 'E117', 'E118', 'E119', 'E120', 'E121', 'E122', 'E123', 'E124', 'E125', 'E126', 'E127', 'E128', 'E129', 'E130', 'E131', 'E132', 'E133', 'E134', 'E135', 'E136', 'E137', 'E138', 'E139', 'E140', 'E141', 'E142', 'E143', 'E144', 'E145', 'E146', 'E147', 'E148', 'E149', 'E150', 'E151', 'E152', 'E153', 'E154', 'E155', 'E156', 'E157', 'E158', 'E159', 'E160', 'E161', 'E162', 'E163', 'E164', 'E165', 'E166', 'E167', 'E168', 'E169', 'E170', 'E171', 'E172', 'E173', 'E174', 'E175', 'E176', 'E177', 'E178', 'E179', 'E180', 'E181', 'E182', 'E183', 'E184', 'E185', 'E186', 'E187', 'E188', 'E189', 'E190', 'E191', 'E192', 'E193', 'E194', 'E195', 'E196', 'E197', 'E198', 'E199', 'E200', 'E201', 'E202', 'E203', 'E204', 'E205', 'E206', 'E207', 'E208', 'E209', 'E210', 'E211', 'E212', 'E213', 'E214', 'E215', 'E216', 'E217', 'E218', 'E219', 'E220', 'E221', 'E222', 'E223', 'E224', 'E225', 'E226', 'E227', 'E228', 'E229', 'E230', 'E231', 'E232', 'E233', 'E234', 'E235', 'E236', 'E237', 'E238', 'E239', 'E240', 'E241', 'E242', 'E243', 'E244', 'E245', 'E246', 'E247', 'E248', 'E249', 'E250', 'E251', 'E252', 'E253', 'E254', 'E255', 'E256']
+
+Full MNE Info:
+<Info | 10 non-empty values
+ bads: []
+ ch_names: E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12, E13, E14, ...
+ chs: 256 EEG
+ custom_ref_applied: False
+ dig: 259 items (3 Cardinal, 256 EEG)
+ highpass: 0.0 Hz
+ line_freq: 60.0
+ lowpass: 250.0 Hz
+ meas_date: unspecified
+ nchan: 256
+ projs: []
+ sfreq: 500.0 Hz
+ subject_info: <subject_info | >
+>
+
+Channel types:
+['eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg']
+
+Channel counts by type:
+  eeg: 256
+
+Montage:
+<DigMontage | 0 extras (headshape), 0 HPIs, 3 fiducials, 256 channels>
+
+Annotations:
+  onset  duration description
+ 61.994    59.982   eyes_open
+121.976    59.998 eyes_closed
+181.974    60.000   eyes_open
+241.974    65.986 eyes_closed
+
+Events derived from annotations:
+Event count                   : 4
+Event IDs                     : {'eyes_closed': 1, 'eyes_open': 2}
+First 20 events [sample, previous value, event ID]:
+[[ 30997      0      2]
+ [ 60988      0      1]
+ [ 90987      0      2]
+ [120987      0      1]]
+
+Signal statistics:
+  E1           type=eeg      min=2.095439e-03 max=3.852333e-03 mean=3.339670e-03 std=3.184330e-04
+  E2           type=eeg      min=-5.864436e-04 max=6.868404e-04 mean=2.570828e-04 std=2.588640e-04
+  E3           type=eeg      min=-4.258534e-03 max=-3.079632e-03 mean=-3.604233e-03 std=1.102553e-04
+  E4           type=eeg      min=4.266196e-05 max=1.150818e-03 mean=6.861870e-04 std=2.120184e-04
+  E5           type=eeg      min=2.904891e-03 max=4.687257e-03 mean=3.699859e-03 std=4.357208e-04
+  E6           type=eeg      min=4.751084e-03 max=5.418988e-03 mean=5.114720e-03 std=1.373128e-04
+  E7           type=eeg      min=8.452398e-03 max=1.025914e-02 mean=9.660853e-03 std=4.261339e-04
+  E8           type=eeg      min=5.053032e-03 max=6.380437e-03 mean=5.862378e-03 std=3.046066e-04
+  E9           type=eeg      min=-7.272540e-04 max=2.182411e-04 mean=-1.953642e-04 std=2.378947e-04
+  E10          type=eeg      min=-7.325008e-04 max=2.488167e-03 mean=9.387315e-04 std=7.616856e-04
+  E11          type=eeg      min=5.633152e-04 max=1.929989e-03 mean=1.341588e-03 std=3.053822e-04
+  E12          type=eeg      min=-2.080555e-03 max=-1.888377e-04 mean=-1.224233e-03 std=3.034580e-04
+  E13          type=eeg      min=-2.190146e-03 max=-5.882809e-04 mean=-1.539155e-03 std=1.929370e-04
+  E14          type=eeg      min=7.036854e-03 max=9.859875e-03 mean=8.443815e-03 std=7.687876e-04
+  E15          type=eeg      min=-1.442767e-04 max=2.842042e-03 mean=1.441551e-03 std=8.362921e-04
+  E16          type=eeg      min=6.535384e-03 max=1.050100e-02 mean=8.461087e-03 std=1.095702e-03
+  E17          type=eeg      min=9.643014e-03 max=1.341481e-02 mean=1.151552e-02 std=9.879374e-04
+  E18          type=eeg      min=3.762774e-03 max=7.757512e-03 mean=5.387854e-03 std=6.079290e-04
+  E19          type=eeg      min=-2.605184e-03 max=-1.326122e-03 mean=-1.784025e-03 std=2.762034e-04
+  E20          type=eeg      min=-4.207141e-03 max=-2.450316e-03 mean=-3.371599e-03 std=4.809185e-04
+  E21          type=eeg      min=-1.095018e-04 max=1.559036e-03 mean=7.486662e-04 std=4.536006e-04
+  E22          type=eeg      min=1.283184e-03 max=3.263882e-03 mean=2.343459e-03 std=5.454944e-04
+  E23          type=eeg      min=3.043636e-03 max=7.036138e-03 mean=5.132443e-03 std=1.105875e-03
+  E24          type=eeg      min=6.037542e-03 max=8.882681e-03 mean=7.393855e-03 std=7.572841e-04
+  E25          type=eeg      min=-2.709753e-03 max=-5.854700e-04 mean=-1.939227e-03 std=3.602488e-04
+  E26          type=eeg      min=-4.164809e-03 max=-2.755139e-03 mean=-3.440404e-03 std=3.569541e-04
+  E27          type=eeg      min=-2.880750e-03 max=-7.642024e-04 mean=-1.805066e-03 std=5.911100e-04
+  E28          type=eeg      min=-3.694389e-03 max=-8.068919e-04 mean=-2.234172e-03 std=7.958041e-04
+  E29          type=eeg      min=6.318259e-04 max=4.500780e-03 mean=2.491025e-03 std=1.053730e-03
+  E30          type=eeg      min=2.479698e-03 max=5.647022e-03 mean=3.867773e-03 std=8.403416e-04
+  E31          type=eeg      min=-2.266119e-03 max=2.252248e-03 mean=-1.592854e-03 std=4.741668e-04
+  E32          type=eeg      min=-1.993640e-03 max=-2.986469e-04 mean=-1.209620e-03 std=3.582949e-04
+  E33          type=eeg      min=-4.203187e-03 max=-1.381655e-03 mean=-2.790604e-03 std=8.544651e-04
+  E34          type=eeg      min=-5.026783e-03 max=-2.533389e-03 mean=-3.853288e-03 std=6.880444e-04
+  E35          type=eeg      min=-9.139323e-04 max=1.549959e-03 mean=4.864906e-05 std=6.373143e-04
+  E36          type=eeg      min=1.723359e-03 max=4.267348e-03 mean=2.801471e-03 std=6.498472e-04
+  E37          type=eeg      min=5.148298e-03 max=9.774743e-03 mean=8.037900e-03 std=1.078407e-03
+  E38          type=eeg      min=-7.720666e-03 max=-4.750806e-03 mean=-6.477159e-03 std=8.039502e-04
+  E39          type=eeg      min=-4.040645e-03 max=-1.725560e-03 mean=-3.050038e-03 std=5.340534e-04
+  E40          type=eeg      min=-3.044555e-03 max=-5.711001e-04 mean=-2.009704e-03 std=6.322420e-04
+  E41          type=eeg      min=2.024942e-03 max=5.510989e-03 mean=3.643174e-03 std=9.494328e-04
+  E42          type=eeg      min=3.629529e-03 max=6.818927e-03 mean=5.042996e-03 std=8.485800e-04
+  E43          type=eeg      min=4.402027e-03 max=8.126949e-03 mean=6.307857e-03 std=9.345784e-04
+  E44          type=eeg      min=6.362898e-03 max=7.732028e-03 mean=7.274872e-03 std=2.576987e-04
+  E45          type=eeg      min=5.490749e-03 max=6.381100e-03 mean=5.991109e-03 std=2.270451e-04
+  E46          type=eeg      min=-1.734246e-03 max=-9.294017e-05 mean=-1.023692e-03 std=3.580860e-04
+  E47          type=eeg      min=-2.002398e-03 max=8.353794e-05 mean=-1.112332e-03 std=4.257528e-04
+  E48          type=eeg      min=-2.977440e-03 max=-1.410196e-03 mean=-2.301547e-03 std=3.246976e-04
+  E49          type=eeg      min=1.134664e-04 max=1.618062e-03 mean=8.076146e-04 std=3.681390e-04
+  E50          type=eeg      min=2.992186e-03 max=4.445152e-03 mean=3.685329e-03 std=3.514122e-04
+  E51          type=eeg      min=3.213456e-03 max=5.292192e-03 mean=4.243444e-03 std=5.363607e-04
+  E52          type=eeg      min=-2.995324e-03 max=1.136659e-04 mean=-1.415538e-03 std=8.004542e-04
+  E53          type=eeg      min=3.513892e-03 max=4.086117e-03 mean=3.810740e-03 std=1.102701e-04
+  E54          type=eeg      min=-6.572646e-03 max=-4.597790e-03 mean=-5.665368e-03 std=4.073762e-04
+  E55          type=eeg      min=-2.637640e-03 max=-1.121220e-03 mean=-1.871015e-03 std=3.435547e-04
+  E56          type=eeg      min=-1.453121e-03 max=-3.756014e-04 mean=-8.958691e-04 std=2.171052e-04
+  E57          type=eeg      min=-9.456255e-06 max=1.220721e-03 mean=5.914132e-04 std=2.866115e-04
+  E58          type=eeg      min=2.432327e-03 max=3.462766e-03 mean=2.990551e-03 std=2.527337e-04
+  E59          type=eeg      min=3.046265e-03 max=4.036176e-03 mean=3.568933e-03 std=2.482822e-04
+  E60          type=eeg      min=2.036826e-03 max=3.233919e-03 mean=2.707408e-03 std=3.350456e-04
+  E61          type=eeg      min=-1.111854e-03 max=1.577818e-04 mean=-5.091786e-04 std=2.906456e-04
+  E62          type=eeg      min=2.828334e-04 max=1.349626e-03 mean=8.103160e-04 std=2.268530e-04
+  E63          type=eeg      min=2.592404e-04 max=1.154973e-03 mean=7.581892e-04 std=2.252751e-04
+  E64          type=eeg      min=-4.738209e-04 max=3.348680e-04 mean=-3.187904e-05 std=1.995467e-04
+  E65          type=eeg      min=1.280983e-03 max=2.000517e-03 mean=1.667064e-03 std=1.711683e-04
+  E66          type=eeg      min=1.687411e-03 max=2.403925e-03 mean=2.073174e-03 std=1.688032e-04
+  E67          type=eeg      min=-3.425134e-03 max=-1.684184e-03 mean=-2.542239e-03 std=4.672844e-04
+  E68          type=eeg      min=-2.975518e-03 max=-1.772800e-03 mean=-2.381211e-03 std=2.709365e-04
+  E69          type=eeg      min=-1.544589e-03 max=-4.714930e-04 mean=-1.012804e-03 std=2.450673e-04
+  E70          type=eeg      min=-2.144126e-03 max=-1.192867e-03 mean=-1.675624e-03 std=2.046124e-04
+  E71          type=eeg      min=-4.815130e-04 max=5.419030e-04 mean=4.300488e-05 std=2.303225e-04
+  E72          type=eeg      min=9.046394e-04 max=2.104650e-03 mean=1.547929e-03 std=2.929617e-04
+  E73          type=eeg      min=1.525955e-02 max=3.289014e-02 mean=2.628908e-02 std=1.098208e-03
+  E74          type=eeg      min=-1.025407e-03 max=-1.106189e-04 mean=-5.767958e-04 std=2.279786e-04
+  E75          type=eeg      min=-6.180803e-05 max=8.633439e-04 mean=3.879662e-04 std=2.179543e-04
+  E76          type=eeg      min=1.195880e-04 max=1.529061e-03 mean=7.510798e-04 std=3.799850e-04
+  E77          type=eeg      min=3.875530e-03 max=5.644398e-03 mean=4.736633e-03 std=4.761782e-04
+  E78          type=eeg      min=-3.225111e-04 max=7.150989e-04 mean=2.450176e-04 std=2.635448e-04
+  E79          type=eeg      min=-1.624491e-02 max=-1.221945e-02 mean=-1.500031e-02 std=1.156333e-03
+  E80          type=eeg      min=2.475666e-03 max=3.627520e-03 mean=3.293109e-03 std=1.725631e-04
+  E81          type=eeg      min=1.769823e-03 max=2.772339e-03 mean=2.288691e-03 std=3.126146e-04
+  E82          type=eeg      min=1.031234e-02 max=1.108884e-02 mean=1.072746e-02 std=1.208416e-04
+  E83          type=eeg      min=-1.487816e-03 max=-7.053051e-04 mean=-1.112377e-03 std=1.411921e-04
+  E84          type=eeg      min=-4.689136e-03 max=-3.393675e-03 mean=-4.014234e-03 std=3.088850e-04
+  E85          type=eeg      min=1.914332e-03 max=3.323477e-03 mean=2.653273e-03 std=3.591328e-04
+  E86          type=eeg      min=2.885191e-03 max=4.295180e-03 mean=3.619658e-03 std=3.429995e-04
+  E87          type=eeg      min=2.701474e-03 max=3.264723e-03 mean=2.995668e-03 std=1.122841e-04
+  E88          type=eeg      min=-8.451885e-04 max=1.319700e-04 mean=-3.069179e-04 std=2.514161e-04
+  E89          type=eeg      min=-2.529148e-04 max=8.493175e-03 mean=5.615261e-03 std=2.149263e-03
+  E90          type=eeg      min=5.889400e-04 max=3.741419e-03 mean=2.765784e-03 std=1.333677e-04
+  E91          type=eeg      min=2.156806e-03 max=2.297287e-01 mean=4.590741e-02 std=8.428581e-02
+  E92          type=eeg      min=-7.048907e-03 max=-5.761277e-03 mean=-6.428371e-03 std=3.016943e-04
+  E93          type=eeg      min=-3.593104e-03 max=-2.461111e-03 mean=-2.928835e-03 std=1.933362e-04
+  E94          type=eeg      min=-9.290451e-03 max=-8.086572e-03 mean=-8.539618e-03 std=1.826430e-04
+  E95          type=eeg      min=-2.825232e-03 max=-1.473994e-03 mean=-1.861810e-03 std=1.683660e-04
+  E96          type=eeg      min=1.177417e-03 max=2.674887e-03 mean=2.118011e-03 std=2.470212e-04
+  E97          type=eeg      min=-2.344808e-03 max=1.707494e-04 mean=-7.842273e-04 std=4.761229e-04
+  E98          type=eeg      min=5.687210e-03 max=1.447886e-02 mean=1.262405e-02 std=9.870047e-04
+  E99          type=eeg      min=1.642461e-03 max=3.076115e-03 mean=2.380572e-03 std=2.072567e-04
+  E100         type=eeg      min=8.085942e-03 max=8.747809e-03 mean=8.482165e-03 std=1.182061e-04
+  E101         type=eeg      min=-9.155489e-03 max=-5.936625e-03 mean=-7.114181e-03 std=5.039094e-04
+  E102         type=eeg      min=-1.263288e-02 max=-1.164844e-02 mean=-1.224808e-02 std=1.399667e-04
+  E103         type=eeg      min=-9.101930e-03 max=-7.740878e-03 mean=-8.370157e-03 std=2.037218e-04
+  E104         type=eeg      min=-4.590620e-03 max=-3.311633e-03 mean=-3.788382e-03 std=1.819224e-04
+  E105         type=eeg      min=-1.542792e-03 max=-3.322774e-04 mean=-8.109299e-04 std=1.861366e-04
+  E106         type=eeg      min=-4.350123e-03 max=-3.570801e-03 mean=-3.900426e-03 std=1.295397e-04
+  E107         type=eeg      min=-7.653275e-04 max=7.189498e-04 mean=9.867748e-05 std=3.177216e-04
+  E108         type=eeg      min=2.255464e-03 max=4.700739e-03 mean=3.463197e-03 std=6.244312e-04
+  E109         type=eeg      min=1.165798e-02 max=2.154288e-02 mean=1.791835e-02 std=2.049321e-03
+  E110         type=eeg      min=5.266417e-03 max=8.419396e-03 mean=7.645692e-03 std=2.151378e-04
+  E111         type=eeg      min=-1.120074e-02 max=-9.610697e-03 mean=-1.023662e-02 std=2.581112e-04
+  E112         type=eeg      min=-8.082257e-03 max=-6.858527e-03 mean=-7.358588e-03 std=1.105265e-04
+  E113         type=eeg      min=-3.504180e-03 max=-1.890747e-03 mean=-2.667734e-03 std=2.171979e-04
+  E114         type=eeg      min=-3.318418e-04 max=1.613897e-03 mean=7.088379e-04 std=2.682742e-04
+  E115         type=eeg      min=-6.162695e-04 max=4.363413e-04 mean=1.729638e-05 std=1.375342e-04
+  E116         type=eeg      min=3.288635e-03 max=5.727900e-03 mean=4.593511e-03 std=6.241250e-04
+  E117         type=eeg      min=-6.672773e-03 max=-4.445805e-03 mean=-5.421846e-03 std=4.848441e-04
+  E118         type=eeg      min=-1.502503e-03 max=2.515812e-03 mean=6.794732e-04 std=1.061327e-03
+  E119         type=eeg      min=-6.640542e-03 max=-1.775358e-03 mean=-3.875939e-03 std=9.213575e-04
+  E120         type=eeg      min=-1.658141e-02 max=-1.107572e-02 mean=-1.576845e-02 std=3.420494e-04
+  E121         type=eeg      min=-1.341965e-02 max=-1.166505e-02 mean=-1.241681e-02 std=1.784269e-04
+  E122         type=eeg      min=-7.775334e-03 max=-5.311428e-03 mean=-6.329805e-03 std=4.337285e-04
+  E123         type=eeg      min=-5.637142e-03 max=-2.682243e-03 mean=-4.011676e-03 std=4.782696e-04
+  E124         type=eeg      min=7.713638e-04 max=2.594827e-03 mean=1.787748e-03 std=4.098840e-04
+  E125         type=eeg      min=-7.573963e-04 max=1.762974e-03 mean=8.238291e-04 std=6.837550e-04
+  E126         type=eeg      min=3.569823e-03 max=9.408948e-03 mean=7.240677e-03 std=1.517474e-03
+  E127         type=eeg      min=-1.989710e-03 max=1.085414e-03 mean=-3.460459e-04 std=3.691084e-04
+  E128         type=eeg      min=-3.730733e-02 max=-2.933523e-02 mean=-3.379321e-02 std=1.238058e-03
+  E129         type=eeg      min=3.829304e-03 max=1.059396e-02 mean=7.811276e-03 std=1.278544e-03
+  E130         type=eeg      min=1.898607e-02 max=2.624379e-02 mean=2.327482e-02 std=1.214892e-03
+  E131         type=eeg      min=-5.639675e-04 max=6.623163e-04 mean=-7.073868e-05 std=2.621420e-04
+  E132         type=eeg      min=2.824899e-03 max=3.714239e-03 mean=3.333338e-03 std=2.322010e-04
+  E133         type=eeg      min=-1.430448e-02 max=-5.176385e-03 mean=-1.129849e-02 std=1.138140e-03
+  E134         type=eeg      min=-8.704376e-03 max=-6.113976e-03 mean=-7.565847e-03 std=2.677571e-04
+  E135         type=eeg      min=-4.790094e-04 max=4.037741e-03 mean=9.182643e-04 std=4.625369e-04
+  E136         type=eeg      min=2.445588e-03 max=1.032628e-02 mean=6.076467e-03 std=1.790785e-03
+  E137         type=eeg      min=2.516879e-03 max=2.944897e-02 mean=1.198986e-02 std=6.246431e-03
+  E138         type=eeg      min=-4.203802e-03 max=-1.799057e-03 mean=-3.353401e-03 std=1.797020e-04
+  E139         type=eeg      min=-2.857496e-03 max=3.937688e-04 mean=-1.998789e-03 std=2.731946e-04
+  E140         type=eeg      min=-2.504677e-02 max=-2.164346e-02 mean=-2.294390e-02 std=2.625746e-04
+  E141         type=eeg      min=1.297274e-02 max=3.343955e-02 mean=2.288022e-02 std=4.792942e-03
+  E142         type=eeg      min=1.432449e-02 max=2.172060e-02 mean=1.916154e-02 std=1.481198e-03
+  E143         type=eeg      min=1.171658e-02 max=1.458330e-02 mean=1.394692e-02 std=2.435944e-04
+  E144         type=eeg      min=6.088499e-03 max=8.266550e-03 mean=7.347487e-03 std=6.446080e-04
+  E145         type=eeg      min=-1.065717e-02 max=2.220156e-01 mean=2.344401e-02 std=4.904182e-02
+  E146         type=eeg      min=-2.874258e-03 max=2.206563e-02 mean=5.309863e-03 std=4.820041e-03
+  E147         type=eeg      min=-1.429064e-03 max=2.566054e-02 mean=6.437960e-03 std=4.852328e-03
+  E148         type=eeg      min=-4.410058e-03 max=2.337389e-02 mean=3.306218e-03 std=5.044700e-03
+  E149         type=eeg      min=-1.231435e-04 max=2.498402e-02 mean=6.719762e-03 std=4.141730e-03
+  E150         type=eeg      min=-8.207169e-03 max=-5.754539e-03 mean=-7.240896e-03 std=5.242816e-04
+  E151         type=eeg      min=4.434375e-03 max=9.152860e-03 mean=7.036056e-03 std=9.922646e-04
+  E152         type=eeg      min=1.309715e-02 max=2.949961e-02 mean=2.041255e-02 std=4.027860e-03
+  E153         type=eeg      min=1.329805e-02 max=3.468475e-02 mean=2.800757e-02 std=3.004092e-03
+  E154         type=eeg      min=1.361513e-02 max=1.853228e-02 mean=1.655481e-02 std=1.189203e-03
+  E155         type=eeg      min=9.944324e-04 max=1.867979e-03 mean=1.528630e-03 std=2.274243e-04
+  E156         type=eeg      min=-1.393026e-02 max=2.295757e-01 mean=-3.765450e-03 std=8.594850e-03
+  E157         type=eeg      min=-8.949453e-03 max=1.931761e-02 mean=-2.086841e-03 std=4.039630e-03
+  E158         type=eeg      min=-3.864885e-04 max=2.483085e-02 mean=6.858308e-03 std=4.477197e-03
+  E159         type=eeg      min=1.357208e-03 max=5.338106e-03 mean=3.122741e-03 std=9.209551e-04
+  E160         type=eeg      min=1.104104e-02 max=2.615381e-02 mean=1.759263e-02 std=3.690142e-03
+  E161         type=eeg      min=1.218337e-02 max=2.317673e-02 mean=1.734093e-02 std=2.475900e-03
+  E162         type=eeg      min=3.789554e-03 max=1.232353e-02 mean=9.452906e-03 std=2.346833e-03
+  E163         type=eeg      min=6.367000e-03 max=1.298325e-02 mean=1.003274e-02 std=1.526996e-03
+  E164         type=eeg      min=7.352297e-04 max=1.341827e-03 mean=9.887965e-04 std=1.086917e-04
+  E165         type=eeg      min=-1.373191e-02 max=2.221491e-01 mean=2.193365e-01 std=2.521871e-02
+  E166         type=eeg      min=-5.119895e-03 max=1.576005e-02 mean=1.779556e-03 std=4.320254e-03
+  E167         type=eeg      min=-4.005653e-03 max=1.600080e-02 mean=2.856940e-03 std=4.266836e-03
+  E168         type=eeg      min=9.130725e-03 max=2.450506e-02 mean=1.569070e-02 std=3.781913e-03
+  E169         type=eeg      min=6.785733e-03 max=2.087413e-02 mean=1.281800e-02 std=3.383216e-03
+  E170         type=eeg      min=2.471205e-03 max=1.107950e-02 mean=6.778640e-03 std=2.091337e-03
+  E171         type=eeg      min=4.278495e-03 max=1.130894e-02 mean=7.948442e-03 std=1.839727e-03
+  E172         type=eeg      min=6.324784e-05 max=5.372685e-03 mean=2.779375e-03 std=1.324553e-03
+  E173         type=eeg      min=5.471329e-03 max=6.654121e-03 mean=6.084412e-03 std=2.723847e-04
+  E174         type=eeg      min=-9.555718e-03 max=1.684343e-01 mean=-7.393490e-04 std=6.546568e-03
+  E175         type=eeg      min=-1.384446e-03 max=1.391763e-02 mean=4.924468e-03 std=3.707287e-03
+  E176         type=eeg      min=5.174453e-03 max=2.007809e-02 mean=1.151184e-02 std=3.668344e-03
+  E177         type=eeg      min=6.378069e-03 max=1.930350e-02 mean=1.215641e-02 std=3.138089e-03
+  E178         type=eeg      min=3.040017e-04 max=5.713273e-03 mean=3.084557e-03 std=1.384412e-03
+  E179         type=eeg      min=2.421202e-03 max=6.114949e-03 mean=4.990674e-03 std=9.284863e-04
+  E180         type=eeg      min=-7.475012e-03 max=-5.982995e-04 mean=-5.120895e-03 std=1.892323e-03
+  E181         type=eeg      min=1.357935e-02 max=3.148470e-02 mean=2.217399e-02 std=4.346764e-03
+  E182         type=eeg      min=-1.173141e-03 max=-2.245988e-04 mean=-6.534780e-04 std=2.683819e-04
+  E183         type=eeg      min=9.091827e-04 max=1.855316e-03 mean=1.416279e-03 std=2.608069e-04
+  E184         type=eeg      min=-3.203619e-03 max=-2.222250e-03 mean=-2.685694e-03 std=2.850666e-04
+  E185         type=eeg      min=-1.999634e-03 max=-1.105517e-03 mean=-1.499644e-03 std=1.925344e-04
+  E186         type=eeg      min=3.515640e-03 max=4.191362e-03 mean=3.893370e-03 std=1.494239e-04
+  E187         type=eeg      min=-2.672442e-03 max=1.251131e-02 mean=3.709488e-03 std=3.656994e-03
+  E188         type=eeg      min=-1.770572e-03 max=1.228260e-02 mean=4.287382e-03 std=3.315223e-03
+  E189         type=eeg      min=2.488555e-03 max=1.611025e-02 mean=8.548386e-03 std=3.223834e-03
+  E190         type=eeg      min=-6.579676e-03 max=1.822796e-03 mean=-2.275139e-03 std=2.289048e-03
+  E191         type=eeg      min=5.434669e-04 max=1.156847e-02 mean=6.929050e-03 std=2.516664e-03
+  E192         type=eeg      min=-5.564457e-03 max=-3.252336e-03 mean=-4.430584e-03 std=5.518838e-04
+  E193         type=eeg      min=1.102624e-02 max=2.618358e-02 mean=1.856867e-02 std=3.780551e-03
+  E194         type=eeg      min=-4.169913e-03 max=-3.241553e-03 mean=-3.642626e-03 std=2.572436e-04
+  E195         type=eeg      min=-4.003748e-04 max=3.448805e-04 mean=1.529989e-05 std=1.950225e-04
+  E196         type=eeg      min=-6.453990e-03 max=-5.832444e-03 mean=-6.119257e-03 std=1.362142e-04
+  E197         type=eeg      min=-2.397469e-03 max=-1.904193e-03 mean=-2.169453e-03 std=8.615384e-05
+  E198         type=eeg      min=8.810870e-04 max=1.723416e-03 mean=1.326442e-03 std=2.260045e-04
+  E199         type=eeg      min=3.443846e-05 max=1.484679e-02 mean=6.632336e-03 std=3.321325e-03
+  E200         type=eeg      min=-4.416734e-03 max=3.405222e-03 mean=-6.440158e-04 std=1.588601e-03
+  E201         type=eeg      min=3.584256e-03 max=6.260309e-03 mean=5.525492e-03 std=5.438433e-04
+  E202         type=eeg      min=4.229894e-03 max=6.426544e-03 mean=5.462181e-03 std=4.540471e-04
+  E203         type=eeg      min=-1.900488e-04 max=5.204164e-04 mean=2.107026e-04 std=1.593238e-04
+  E204         type=eeg      min=-4.304110e-03 max=-3.514953e-03 mean=-3.829695e-03 std=1.850817e-04
+  E205         type=eeg      min=-4.199845e-03 max=-3.581223e-03 mean=-3.882219e-03 std=1.094162e-04
+  E206         type=eeg      min=-8.574355e-03 max=-7.819378e-03 mean=-8.187796e-03 std=1.844130e-04
+  E207         type=eeg      min=-4.807394e-03 max=-3.611597e-03 mean=-4.187966e-03 std=3.275033e-04
+  E208         type=eeg      min=4.850185e-04 max=1.924694e-02 mean=6.465943e-03 std=3.606093e-03
+  E209         type=eeg      min=-2.976714e-03 max=1.068598e-03 mean=-3.458999e-04 std=9.341096e-04
+  E210         type=eeg      min=-2.149736e-03 max=-9.689578e-04 mean=-1.470716e-03 std=1.977112e-04
+  E211         type=eeg      min=2.727510e-03 max=3.936636e-03 mean=3.355377e-03 std=2.544301e-04
+  E212         type=eeg      min=-5.203855e-03 max=-4.333199e-03 mean=-4.663502e-03 std=1.910512e-04
+  E213         type=eeg      min=-4.560258e-03 max=-3.800867e-03 mean=-4.147420e-03 std=1.847190e-04
+  E214         type=eeg      min=-4.624057e-03 max=-3.717664e-03 mean=-4.137157e-03 std=2.288170e-04
+  E215         type=eeg      min=-6.153565e-03 max=-5.023541e-03 mean=-5.441428e-03 std=2.398153e-04
+  E216         type=eeg      min=2.720932e-03 max=5.146592e-02 mean=1.034052e-02 std=4.255354e-03
+  E217         type=eeg      min=5.089843e-03 max=5.993005e-03 mean=5.534489e-03 std=1.590144e-04
+  E218         type=eeg      min=3.760538e-03 max=5.774810e-03 mean=4.962490e-03 std=4.005521e-04
+  E219         type=eeg      min=-2.117258e-04 max=2.830642e-03 mean=1.084279e-03 std=2.788656e-04
+  E220         type=eeg      min=-2.992291e-03 max=-2.160532e-03 mean=-2.558702e-03 std=1.385938e-04
+  E221         type=eeg      min=-4.714959e-03 max=-3.584709e-03 mean=-4.134563e-03 std=1.995702e-04
+  E222         type=eeg      min=-7.949992e-03 max=-7.133793e-03 mean=-7.480538e-03 std=1.933133e-04
+  E223         type=eeg      min=-1.250683e-02 max=-1.148848e-02 mean=-1.181888e-02 std=1.676710e-04
+  E224         type=eeg      min=-5.704154e-03 max=-4.535034e-03 mean=-4.998214e-03 std=1.963614e-04
+  E225         type=eeg      min=-6.192599e-03 max=-5.335941e-03 mean=-5.753683e-03 std=1.517912e-04
+  E226         type=eeg      min=2.219820e-01 max=2.219820e-01 mean=2.219820e-01 std=2.775558e-17
+  E227         type=eeg      min=-5.104092e-03 max=-4.213603e-03 mean=-4.662002e-03 std=1.380829e-04
+  E228         type=eeg      min=-6.572713e-04 max=1.578237e-03 mean=3.179510e-04 std=5.299416e-04
+  E229         type=eeg      min=6.580492e-04 max=4.673789e-03 mean=1.882602e-03 std=9.396865e-04
+  E230         type=eeg      min=-4.564390e-04 max=2.112824e-03 mean=3.592705e-04 std=3.922367e-04
+  E231         type=eeg      min=-6.445902e-04 max=1.449077e-03 mean=-8.993963e-05 std=2.455820e-04
+  E232         type=eeg      min=1.089916e-03 max=2.642252e-03 mean=1.725448e-03 std=3.107308e-04
+  E233         type=eeg      min=2.260909e-03 max=4.285726e-03 mean=3.206026e-03 std=2.757778e-04
+  E234         type=eeg      min=-7.659949e-03 max=-5.207811e-03 mean=-6.918565e-03 std=2.962615e-04
+  E235         type=eeg      min=-3.928381e-03 max=-2.208671e-03 mean=-3.062597e-03 std=3.440360e-04
+  E236         type=eeg      min=2.001756e-03 max=3.514661e-03 mean=2.529052e-03 std=1.756557e-04
+  E237         type=eeg      min=5.908677e-04 max=1.521710e-03 mean=1.048355e-03 std=1.823083e-04
+  E238         type=eeg      min=-9.392402e-03 max=-7.717632e-03 mean=-8.643250e-03 std=2.845661e-04
+  E239         type=eeg      min=-1.623784e-03 max=2.862384e-04 mean=-9.674521e-04 std=3.027598e-04
+  E240         type=eeg      min=-3.097446e-03 max=-7.323665e-04 mean=-2.382056e-03 std=3.283673e-04
+  E241         type=eeg      min=-7.022154e-03 max=-4.411038e-03 mean=-6.079368e-03 std=3.283917e-04
+  E242         type=eeg      min=-4.654883e-03 max=-7.200029e-04 mean=-3.763608e-03 std=3.689292e-04
+  E243         type=eeg      min=-7.604107e-03 max=-4.722786e-03 mean=-6.977193e-03 std=2.509700e-04
+  E244         type=eeg      min=6.238483e-04 max=2.193030e-03 mean=1.516345e-03 std=3.203802e-04
+  E245         type=eeg      min=-5.551149e-03 max=-4.439597e-03 mean=-4.930821e-03 std=2.106202e-04
+  E246         type=eeg      min=-5.157205e-03 max=-3.873278e-03 mean=-4.562987e-03 std=3.605701e-04
+  E247         type=eeg      min=1.161427e-03 max=2.827966e-03 mean=1.648366e-03 std=1.995864e-04
+  E248         type=eeg      min=6.588618e-04 max=2.486675e-03 mean=1.449826e-03 std=4.803430e-04
+  E249         type=eeg      min=-5.633407e-03 max=-4.423920e-03 mean=-5.098036e-03 std=2.726864e-04
+  E250         type=eeg      min=-6.775230e-03 max=-4.990580e-03 mean=-6.183746e-03 std=3.993389e-04
+  E251         type=eeg      min=-4.951437e-03 max=-3.060783e-03 mean=-4.359657e-03 std=3.497078e-04
+  E252         type=eeg      min=-5.138830e-03 max=-3.884077e-03 mean=-4.618014e-03 std=1.556746e-04
+  E253         type=eeg      min=-6.579883e-03 max=-4.851353e-03 mean=-5.792481e-03 std=4.391148e-04
+  E254         type=eeg      min=-1.024243e-03 max=3.373913e-03 mean=1.330794e-03 std=7.486988e-04
+  E255         type=eeg      min=-2.711453e-04 max=4.770386e-03 mean=1.291826e-03 std=1.416091e-03
+  E256         type=eeg      min=-2.468469e-03 max=6.056842e-05 mean=-9.946134e-04 std=6.299786e-04
+
+==========================================================================================
+INSPECTION COMPLETE
+==========================================================================================

@@ -1,0 +1,477 @@
+
+==========================================================================================
+BRAinDECODE DATASET OVERVIEW
+==========================================================================================
+Dataset class                 : EEGDashDataset
+Number of recordings          : 9981952
+
+Dataset description:
+
+Description:
+subject task sex group  session  run  age  gender
+    137 rest   f   REM      NaN  NaN  NaN     NaN
+    108 rest   m   REM      NaN  NaN  NaN     NaN
+    106 rest   f  WAKE      NaN  NaN  NaN     NaN
+
+Description columns:
+['subject', 'task', 'sex', 'group', 'session', 'run', 'age', 'gender']
+
+Available dataset-level attributes:
+datasets                      : [<EEGDashRaw | 73 ch (EEG) | 512.0 Hz | 3291648 samples (6429.0 s)>
+  description: subject=137, task=rest, sex=f, group=REM, session=nan, run=nan, age=nan, gender=nan
+  (Data not loaded yet — info derived from record metadata.), <EEGDashRaw | 73 ch (EEG) | 512.0 Hz | 3843584 samples (7507.0 s)>
+  description: subject=108, task=rest, sex=m, group=REM, session=nan, run=nan, age=nan, gender=nan
+  (Data not loaded yet — info derived from record metadata.), <EEGDashRaw | 73 ch (EEG) | 512.0 Hz | 2846720 samples (5560.0 s)>
+  description: subject=106, task=rest, sex=f, group=WAKE, session=nan, run=nan, age=nan, gender=nan
+  (Data not loaded yet — info derived from record metadata.)]
+description                   :   subject  task sex group  session  run  age  gender
+0     137  rest   f   REM      NaN  NaN  NaN     NaN
+1     108  rest   m   REM      NaN  NaN  NaN     NaN
+2     106  rest   f  WAKE      NaN  NaN  NaN     NaN
+transform                     : [None, None, None]
+
+==========================================================================================
+INDIVIDUAL RECORDINGS
+==========================================================================================
+
+==========================================================================================
+RECORDING 0: BRAinDECODE ENTRY
+==========================================================================================
+Entry class                   : EEGDashRaw
+Entry length                  : <bound method EEGDashRaw.__len__ of <EEGDashRaw | 73 ch (EEG) | 512.0 Hz | 3291648 samples (6429.0 s)>
+  description: subject=137, task=rest, sex=f, group=REM, session=nan, run=nan, age=nan, gender=nan
+  (Data not loaded yet — info derived from record metadata.)>
+Description                   : subject     137
+task       rest
+sex           f
+group       REM
+session     NaN
+run         NaN
+age         NaN
+gender      NaN
+dtype: str
+
+Entry attributes:
+['bids_root', 'bidspath', 'cache_dir', 'description', 'filecache', 'raw', 'raw_preproc_kwargs', 'record', 'return_ch_pos', 's3file', 'set_description', 'target_name', 'transform']
+[2;36m[10/14/26 22:17:08][0m[2;36m [0m[33mWARNING [0m File not found on S3, skipping: s3:[35m/[0m[35m/openneuro.org/ds006576/sub-137/eeg/[0m[95msub-137_task-rest_eeg.dat[0m                                                               ]8;id=7475551;file:///home/arielalves/Undergrad-Research-EEG-FM/.venv/lib/python3.12/site-packages/eegdash/downloader.py\[2mdownloader.py[0m]8;;\[2m:[0m]8;id=7475552;file:///home/arielalves/Undergrad-Research-EEG-FM/.venv/lib/python3.12/site-packages/eegdash/downloader.py#286\[2m286[0m]8;;\
+
+==========================================================================================
+RECORDING 0: MNE INFORMATION
+==========================================================================================
+Python type                   : RawBrainVision
+Number of channels            : 73
+Sampling frequency (Hz)       : 512.0
+Number of samples             : 3291648
+Duration (seconds)            : 6428.998046875
+First sample                  : 0
+Last sample                   : 3291647
+Measurement date              : None
+Channel names                 : ['A1_Fp1', 'A2_AF7', 'A3_AF3', 'A4_F1', 'A5_F3', 'A6_F5', 'A7_F7', 'A8_FT7', 'A9_FC5', 'A10_FC3', 'A11_FC1', 'A12_C1', 'A13_C3', 'A14_C5', 'A15_T7', 'A16_TP7', 'A17_CP5', 'A18_CP3', 'A19_CP1', 'A20_P1', 'A21_P3', 'A22_P5', 'A23_P7', 'A24_P9', 'A25_PO7', 'A26_PO3', 'A27_O1', 'A28_Iz', 'A29_Oz', 'A30_POz', 'A31_Pz', 'A32_CPz', 'B1_Fpz', 'B2_Fp2', 'B3_AF8', 'B4_AF4', 'B5_AFz', 'B6_Fz', 'B7_F2', 'B8_F4', 'B9_F6', 'B10_F8', 'B11_FT8', 'B12_FC6', 'B13_FC4', 'B14_FC2', 'B15_FCz', 'B16_Cz', 'B17_C2', 'B18_C4', 'B19_C6', 'B20_T8', 'B21_TP8', 'B22_CP6', 'B23_CP4', 'B24_CP2', 'B25_P2', 'B26_P4', 'B27_P6', 'B28_P8', 'B29_P10', 'B30_PO8', 'B31_PO4', 'B32_O2', 'A1', 'A2', 'LOC', 'ROC', 'EMG1', 'EMG2', 'ECG1', 'ECG2', 'Status']
+
+Full MNE Info:
+<Info | 9 non-empty values
+ bads: []
+ ch_names: A1_Fp1, A2_AF7, A3_AF3, A4_F1, A5_F3, A6_F5, A7_F7, A8_FT7, ...
+ chs: 64 EEG, 2 misc, 2 EOG, 2 EMG, 2 ECG, 1 Stimulus
+ custom_ref_applied: False
+ highpass: 0.0 Hz
+ line_freq: 60.0
+ lowpass: 256.0 Hz
+ meas_date: unspecified
+ nchan: 73
+ projs: []
+ sfreq: 512.0 Hz
+ subject_info: <subject_info | >
+>
+
+Channel types:
+['eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'misc', 'misc', 'eog', 'eog', 'emg', 'emg', 'ecg', 'ecg', 'stim']
+
+Channel counts by type:
+  ecg: 2
+  eeg: 64
+  emg: 2
+  eog: 2
+  misc: 2
+  stim: 1
+
+Montage:
+No montage assigned
+
+Annotations:
+No annotations
+
+Events derived from annotations:
+Event count                   : 0
+Event IDs                     : {}
+
+Signal statistics:
+  A1_Fp1       type=eeg      min=-1.012485e-03 max=7.396387e-03 mean=-1.042147e-06 std=1.101364e-04
+  A2_AF7       type=eeg      min=-6.309904e-04 max=3.256950e-03 mean=-6.374488e-07 std=5.751765e-05
+  A3_AF3       type=eeg      min=-4.024939e-04 max=3.649944e-04 mean=9.424081e-07 std=2.839671e-05
+  A4_F1        type=eeg      min=-3.489947e-04 max=3.304950e-04 mean=-2.235828e-06 std=2.405228e-05
+  A5_F3        type=eeg      min=-3.944940e-04 max=3.259950e-04 mean=-4.115817e-06 std=2.530084e-05
+  A6_F5        type=eeg      min=-4.829926e-04 max=5.209921e-04 mean=-1.029982e-06 std=2.417414e-05
+  A7_F7        type=eeg      min=-7.579884e-04 max=3.904940e-04 mean=-1.057571e-06 std=2.694999e-05
+  A8_FT7       type=eeg      min=-4.649929e-04 max=6.544900e-04 mean=-1.972275e-06 std=2.595261e-05
+  A9_FC5       type=eeg      min=-5.109922e-04 max=3.794942e-04 mean=-1.294166e-06 std=2.154288e-05
+  A10_FC3      type=eeg      min=-4.334934e-04 max=3.164952e-04 mean=-1.184336e-06 std=1.994637e-05
+  A11_FC1      type=eeg      min=-3.889940e-04 max=3.144952e-04 mean=-1.408280e-06 std=2.211804e-05
+  A12_C1       type=eeg      min=-3.879941e-04 max=4.229935e-04 mean=-2.228576e-06 std=2.017181e-05
+  A13_C3       type=eeg      min=-3.874941e-04 max=3.194951e-04 mean=-2.133553e-06 std=1.479217e-05
+  A14_C5       type=eeg      min=-4.154937e-04 max=4.104937e-04 mean=-7.946919e-07 std=1.857302e-05
+  A15_T7       type=eeg      min=-5.139921e-04 max=3.394948e-04 mean=-1.368099e-07 std=2.308367e-05
+  A16_TP7      type=eeg      min=-5.079922e-04 max=4.154937e-04 mean=-1.066006e-06 std=2.164122e-05
+  A17_CP5      type=eeg      min=-3.839941e-04 max=3.254950e-04 mean=-6.588119e-08 std=1.420058e-05
+  A18_CP3      type=eeg      min=-3.424948e-04 max=3.219951e-04 mean=-1.640482e-06 std=1.112238e-05
+  A19_CP1      type=eeg      min=-4.474932e-04 max=2.094968e-04 mean=-1.964013e-06 std=1.263788e-05
+  A20_P1       type=eeg      min=-4.034938e-04 max=2.639960e-04 mean=-2.395366e-06 std=8.199324e-06
+  A21_P3       type=eeg      min=-3.964940e-04 max=2.584961e-04 mean=-1.898477e-06 std=1.160168e-05
+  A22_P5       type=eeg      min=-3.794942e-04 max=1.190482e-03 mean=-5.140395e-07 std=2.342785e-05
+  A23_P7       type=eeg      min=-3.904940e-04 max=1.171482e-03 mean=-8.582363e-07 std=2.227278e-05
+  A24_P9       type=eeg      min=-4.549930e-04 max=3.449947e-04 mean=-2.297853e-07 std=2.053241e-05
+  A25_PO7      type=eeg      min=-6.599899e-04 max=3.040954e-03 mean=-7.154991e-07 std=7.079483e-05
+  A26_PO3      type=eeg      min=-4.419933e-04 max=5.199921e-04 mean=-9.548644e-07 std=1.325206e-05
+  A27_O1       type=eeg      min=-4.104937e-04 max=3.534946e-04 mean=-6.299483e-09 std=1.375380e-05
+  A28_Iz       type=eeg      min=-4.569930e-04 max=3.319949e-04 mean=-5.325189e-07 std=1.822818e-05
+  A29_Oz       type=eeg      min=-4.874926e-04 max=1.539977e-04 mean=9.959707e-08 std=1.382078e-05
+  A30_POz      type=eeg      min=-3.844941e-04 max=3.114952e-04 mean=-9.333687e-07 std=8.853241e-06
+  A31_Pz       type=eeg      min=-4.244935e-04 max=2.704959e-04 mean=-1.446867e-06 std=9.139736e-06
+  A32_CPz      type=eeg      min=-4.984924e-04 max=2.029969e-04 mean=-2.636672e-06 std=1.336343e-05
+  B1_Fpz       type=eeg      min=-4.654929e-04 max=7.109891e-04 mean=3.169850e-07 std=3.536010e-05
+  B2_Fp2       type=eeg      min=-5.424917e-04 max=1.681974e-03 mean=-1.276026e-06 std=4.272223e-05
+  B3_AF8       type=eeg      min=-5.064923e-04 max=1.484477e-03 mean=-9.738526e-07 std=4.150458e-05
+  B4_AF4       type=eeg      min=-4.054938e-04 max=3.964940e-04 mean=-5.726666e-07 std=2.993387e-05
+  B5_AFz       type=eeg      min=-3.349949e-04 max=8.779866e-04 mean=-7.745314e-07 std=2.870332e-05
+  B6_Fz        type=eeg      min=-3.484947e-04 max=3.369948e-04 mean=-2.719572e-06 std=2.414053e-05
+  B7_F2        type=eeg      min=-3.579945e-04 max=3.254950e-04 mean=-1.836365e-06 std=2.468502e-05
+  B8_F4        type=eeg      min=-3.654944e-04 max=3.394948e-04 mean=-1.696071e-06 std=2.449053e-05
+  B9_F6        type=eeg      min=-4.794927e-04 max=4.749927e-04 mean=-1.097598e-06 std=2.698295e-05
+  B10_F8       type=eeg      min=-5.239920e-04 max=3.444948e-04 mean=-2.827979e-07 std=2.973205e-05
+  B11_FT8      type=eeg      min=-4.359933e-04 max=5.324919e-04 mean=-1.817113e-06 std=2.856765e-05
+  B12_FC6      type=eeg      min=-4.794927e-04 max=3.579945e-04 mean=-1.249230e-06 std=2.221743e-05
+  B13_FC4      type=eeg      min=-3.879941e-04 max=2.859956e-04 mean=-2.496873e-06 std=2.093828e-05
+  B14_FC2      type=eeg      min=-3.634944e-04 max=2.664959e-04 mean=-2.965355e-06 std=2.123155e-05
+  B15_FCz      type=eeg      min=-3.599945e-04 max=3.264950e-04 mean=-2.839859e-06 std=2.214071e-05
+  B16_Cz       type=eeg      min=-4.959924e-04 max=6.929894e-04 mean=-2.311198e-06 std=2.071559e-05
+  B17_C2       type=eeg      min=-3.959940e-04 max=2.629960e-04 mean=-2.067789e-06 std=1.591621e-05
+  B18_C4       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=7.376716e-06 std=7.142700e-04
+  B19_C6       type=eeg      min=-4.004939e-04 max=6.374903e-04 mean=-8.958034e-07 std=2.074827e-05
+  B20_T8       type=eeg      min=-5.979908e-04 max=1.902971e-03 mean=-1.563001e-06 std=3.895061e-05
+  B21_TP8      type=eeg      min=-4.869926e-04 max=1.147982e-03 mean=-4.343254e-07 std=2.592293e-05
+  B22_CP6      type=eeg      min=-4.149937e-04 max=6.644899e-04 mean=-6.406894e-07 std=1.927381e-05
+  B23_CP4      type=eeg      min=-3.954940e-04 max=3.694944e-04 mean=-1.651123e-06 std=1.583492e-05
+  B24_CP2      type=eeg      min=-4.439932e-04 max=2.984955e-04 mean=5.243154e-07 std=1.357088e-05
+  B25_P2       type=eeg      min=-1.341979e-03 max=7.119891e-04 mean=7.898819e-07 std=2.258066e-05
+  B26_P4       type=eeg      min=-4.384933e-04 max=2.409963e-04 mean=-1.311633e-06 std=1.164221e-05
+  B27_P6       type=eeg      min=-4.404933e-04 max=2.144967e-04 mean=-4.626858e-07 std=1.336410e-05
+  B28_P8       type=eeg      min=-4.589930e-04 max=2.309965e-04 mean=-1.006024e-06 std=1.726912e-05
+  B29_P10      type=eeg      min=-5.179921e-04 max=4.039938e-04 mean=-2.282317e-07 std=2.219401e-05
+  B30_PO8      type=eeg      min=-4.259935e-04 max=2.674959e-04 mean=-7.226138e-07 std=1.562718e-05
+  B31_PO4      type=eeg      min=-4.499931e-04 max=2.314965e-04 mean=-8.254194e-07 std=9.325075e-06
+  B32_O2       type=eeg      min=-5.504916e-04 max=2.489962e-04 mean=-1.694507e-07 std=1.617029e-05
+  A1           type=misc     min=-5.489916e-04 max=7.069892e-04 mean=-5.772684e-07 std=2.780562e-05
+  A2           type=misc     min=-2.754458e-03 max=1.010885e-02 mean=-2.076910e-07 std=1.294437e-04
+  LOC          type=eog      min=-6.414902e-04 max=2.491962e-03 mean=-6.931723e-07 std=4.020524e-05
+  ROC          type=eog      min=-4.729928e-04 max=4.594930e-04 mean=-3.600051e-07 std=3.459103e-05
+  EMG1         type=emg      min=-6.379902e-04 max=4.934925e-04 mean=-8.758935e-07 std=3.155597e-05
+  EMG2         type=emg      min=-9.544854e-04 max=3.809942e-04 mean=-6.509000e-07 std=3.315180e-05
+  ECG1         type=ecg      min=-1.252481e-03 max=4.051938e-03 mean=-5.604818e-07 std=2.413704e-04
+  ECG2         type=ecg      min=-4.839926e-04 max=6.544900e-04 mean=-7.621479e-07 std=4.246759e-05
+  Status       type=stim     min=0.000000e+00 max=0.000000e+00 mean=0.000000e+00 std=0.000000e+00
+
+==========================================================================================
+RECORDING 1: BRAinDECODE ENTRY
+==========================================================================================
+Entry class                   : EEGDashRaw
+Entry length                  : <bound method EEGDashRaw.__len__ of <EEGDashRaw | 73 ch (EEG) | 512.0 Hz | 3843584 samples (7507.0 s)>
+  description: subject=108, task=rest, sex=m, group=REM, session=nan, run=nan, age=nan, gender=nan
+  (Data not loaded yet — info derived from record metadata.)>
+Description                   : subject     108
+task       rest
+sex           m
+group       REM
+session     NaN
+run         NaN
+age         NaN
+gender      NaN
+dtype: str
+
+Entry attributes:
+['bids_root', 'bidspath', 'cache_dir', 'description', 'filecache', 'raw', 'raw_preproc_kwargs', 'record', 'return_ch_pos', 's3file', 'set_description', 'target_name', 'transform']
+[2;36m[10/14/26 22:17:18][0m[2;36m [0m[33mWARNING [0m File not found on S3, skipping: s3:[35m/[0m[35m/openneuro.org/ds006576/sub-108/eeg/[0m[95msub-108_task-rest_eeg.dat[0m                                                               ]8;id=7475557;file:///home/arielalves/Undergrad-Research-EEG-FM/.venv/lib/python3.12/site-packages/eegdash/downloader.py\[2mdownloader.py[0m]8;;\[2m:[0m]8;id=7475558;file:///home/arielalves/Undergrad-Research-EEG-FM/.venv/lib/python3.12/site-packages/eegdash/downloader.py#286\[2m286[0m]8;;\
+
+==========================================================================================
+RECORDING 1: MNE INFORMATION
+==========================================================================================
+Python type                   : RawBrainVision
+Number of channels            : 73
+Sampling frequency (Hz)       : 512.0
+Number of samples             : 3843584
+Duration (seconds)            : 7506.998046875
+First sample                  : 0
+Last sample                   : 3843583
+Measurement date              : None
+Channel names                 : ['A1_Fp1', 'A2_AF7', 'A3_AF3', 'A4_F1', 'A5_F3', 'A6_F5', 'A7_F7', 'A8_FT7', 'A9_FC5', 'A10_FC3', 'A11_FC1', 'A12_C1', 'A13_C3', 'A14_C5', 'A15_T7', 'A16_TP7', 'A17_CP5', 'A18_CP3', 'A19_CP1', 'A20_CPz', 'A21_Pz', 'A22_P1', 'A23_P3', 'A24_P5', 'A25_P7', 'A26_P9', 'A27_PO7', 'A28_PO3', 'A29_POz', 'A30_O1', 'A31_Oz', 'A32_Iz', 'B1_Fpz', 'B2_Fp2', 'B3_AF8', 'B4_AF4', 'B5_AFz', 'B6_Fz', 'B7_F2', 'B8_F4', 'B9_F6', 'B10_F8', 'B11_FT8', 'B12_FC6', 'B13_FC4', 'B14_FC2', 'B15_FCz', 'B16_Cz', 'B17_C2', 'B18_C4', 'B19_C6', 'B20_T8', 'B21_TP8', 'B22_CP6', 'B23_CP4', 'B24_CP2', 'B25_P2', 'B26_P4', 'B27_P6', 'B28_P8', 'B29_P10', 'B30_PO8', 'B31_PO4', 'B32_O2', 'A1', 'A2', 'LOC', 'ROC', 'EMG1', 'EMG2', 'ECG1', 'ECG2', 'Status']
+
+Full MNE Info:
+<Info | 9 non-empty values
+ bads: []
+ ch_names: A1_Fp1, A2_AF7, A3_AF3, A4_F1, A5_F3, A6_F5, A7_F7, A8_FT7, ...
+ chs: 64 EEG, 2 misc, 2 EOG, 2 EMG, 2 ECG, 1 Stimulus
+ custom_ref_applied: False
+ highpass: 0.0 Hz
+ line_freq: 60.0
+ lowpass: 256.0 Hz
+ meas_date: unspecified
+ nchan: 73
+ projs: []
+ sfreq: 512.0 Hz
+ subject_info: <subject_info | >
+>
+
+Channel types:
+['eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'misc', 'misc', 'eog', 'eog', 'emg', 'emg', 'ecg', 'ecg', 'stim']
+
+Channel counts by type:
+  ecg: 2
+  eeg: 64
+  emg: 2
+  eog: 2
+  misc: 2
+  stim: 1
+
+Montage:
+No montage assigned
+
+Annotations:
+No annotations
+
+Events derived from annotations:
+Event count                   : 0
+Event IDs                     : {}
+
+Signal statistics:
+  A1_Fp1       type=eeg      min=-1.048984e-03 max=3.968439e-03 mean=1.941003e-06 std=5.968372e-05
+  A2_AF7       type=eeg      min=-1.043484e-03 max=4.679429e-03 mean=1.593460e-06 std=6.342397e-05
+  A3_AF3       type=eeg      min=-1.035484e-03 max=8.409872e-04 mean=1.624124e-06 std=4.350166e-05
+  A4_F1        type=eeg      min=-1.039484e-03 max=8.444871e-04 mean=4.464270e-07 std=4.061394e-05
+  A5_F3        type=eeg      min=-1.035484e-03 max=8.344872e-04 mean=1.074353e-06 std=4.213213e-05
+  A6_F5        type=eeg      min=-1.051484e-03 max=8.269874e-04 mean=1.145569e-06 std=4.434317e-05
+  A7_F7        type=eeg      min=-1.018484e-03 max=8.134876e-04 mean=1.697953e-06 std=4.381479e-05
+  A8_FT7       type=eeg      min=-1.035984e-03 max=8.994863e-04 mean=9.652992e-08 std=4.399768e-05
+  A9_FC5       type=eeg      min=-1.037984e-03 max=8.339872e-04 mean=-3.044538e-07 std=4.034431e-05
+  A10_FC3      type=eeg      min=-1.030984e-03 max=8.494871e-04 mean=4.788226e-07 std=4.124235e-05
+  A11_FC1      type=eeg      min=-1.015984e-03 max=8.369872e-04 mean=5.904623e-07 std=4.270510e-05
+  A12_C1       type=eeg      min=-1.124483e-03 max=8.459871e-04 mean=-2.278820e-07 std=4.271425e-05
+  A13_C3       type=eeg      min=-1.065984e-03 max=8.409872e-04 mean=-1.236913e-06 std=3.914722e-05
+  A14_C5       type=eeg      min=-1.067484e-03 max=8.229874e-04 mean=3.410707e-07 std=3.949336e-05
+  A15_T7       type=eeg      min=-1.058484e-03 max=1.573476e-03 mean=-1.373699e-07 std=5.095896e-05
+  A16_TP7      type=eeg      min=-1.048484e-03 max=8.319873e-04 mean=3.959974e-07 std=4.080163e-05
+  A17_CP5      type=eeg      min=-1.044484e-03 max=1.367979e-03 mean=-3.340987e-07 std=4.680351e-05
+  A18_CP3      type=eeg      min=-1.073984e-03 max=8.409872e-04 mean=-8.301677e-07 std=3.598770e-05
+  A19_CP1      type=eeg      min=-1.075984e-03 max=7.999878e-04 mean=-9.928056e-07 std=3.819561e-05
+  A20_CPz      type=eeg      min=-1.071484e-03 max=8.309873e-04 mean=-1.047847e-06 std=3.550989e-05
+  A21_Pz       type=eeg      min=-1.030984e-03 max=8.344872e-04 mean=-4.059711e-07 std=4.074537e-05
+  A22_P1       type=eeg      min=-1.075984e-03 max=9.034862e-04 mean=-4.352896e-07 std=4.496063e-05
+  A23_P3       type=eeg      min=-1.053984e-03 max=8.364872e-04 mean=-1.065394e-07 std=3.808145e-05
+  A24_P5       type=eeg      min=-1.060984e-03 max=8.384872e-04 mean=-4.561762e-07 std=3.884210e-05
+  A25_P7       type=eeg      min=-1.064484e-03 max=8.339872e-04 mean=-9.183948e-07 std=4.293404e-05
+  A26_P9       type=eeg      min=-1.057484e-03 max=8.224874e-04 mean=-8.901140e-07 std=3.626859e-05
+  A27_PO7      type=eeg      min=-1.077484e-03 max=8.279874e-04 mean=-6.307332e-07 std=3.665115e-05
+  A28_PO3      type=eeg      min=-1.064484e-03 max=8.339872e-04 mean=-1.998410e-06 std=3.832963e-05
+  A29_POz      type=eeg      min=-1.075484e-03 max=8.304873e-04 mean=-3.110674e-07 std=3.642383e-05
+  A30_O1       type=eeg      min=-1.070484e-03 max=8.169875e-04 mean=-5.164147e-07 std=3.574925e-05
+  A31_Oz       type=eeg      min=-1.062484e-03 max=8.429871e-04 mean=-1.111752e-06 std=3.619780e-05
+  A32_Iz       type=eeg      min=-1.056984e-03 max=8.479871e-04 mean=2.677805e-07 std=3.843130e-05
+  B1_Fpz       type=eeg      min=-1.060484e-03 max=3.076953e-03 mean=1.728342e-06 std=5.302071e-05
+  B2_Fp2       type=eeg      min=-1.031484e-03 max=4.579430e-03 mean=1.256397e-06 std=6.355041e-05
+  B3_AF8       type=eeg      min=-1.057484e-03 max=4.574430e-03 mean=-4.856811e-07 std=6.180337e-05
+  B4_AF4       type=eeg      min=-1.048984e-03 max=8.489871e-04 mean=1.519208e-06 std=4.345827e-05
+  B5_AFz       type=eeg      min=-1.034484e-03 max=8.454871e-04 mean=1.705695e-06 std=4.186071e-05
+  B6_Fz        type=eeg      min=-1.059484e-03 max=8.514870e-04 mean=-7.678796e-08 std=4.113930e-05
+  B7_F2        type=eeg      min=-1.069984e-03 max=8.604869e-04 mean=-3.575786e-07 std=4.298250e-05
+  B8_F4        type=eeg      min=-1.050484e-03 max=8.509870e-04 mean=-9.266638e-07 std=4.299535e-05
+  B9_F6        type=eeg      min=-1.064984e-03 max=8.444871e-04 mean=2.167557e-06 std=4.438585e-05
+  B10_F8       type=eeg      min=-1.074984e-03 max=8.569869e-04 mean=7.544695e-07 std=4.776147e-05
+  B11_FT8      type=eeg      min=-1.048484e-03 max=8.469871e-04 mean=4.201595e-07 std=4.300439e-05
+  B12_FC6      type=eeg      min=-1.068984e-03 max=8.509870e-04 mean=3.317587e-07 std=4.026659e-05
+  B13_FC4      type=eeg      min=-1.032484e-03 max=8.684868e-04 mean=-3.683369e-07 std=4.196695e-05
+  B14_FC2      type=eeg      min=-1.035984e-03 max=8.469871e-04 mean=2.438337e-07 std=4.295234e-05
+  B15_FCz      type=eeg      min=-1.009985e-03 max=9.724852e-04 mean=3.161615e-07 std=4.607616e-05
+  B16_Cz       type=eeg      min=-1.068984e-03 max=8.444871e-04 mean=-9.907240e-07 std=3.929040e-05
+  B17_C2       type=eeg      min=-1.054484e-03 max=9.074861e-04 mean=-6.653883e-07 std=4.056701e-05
+  B18_C4       type=eeg      min=-1.086483e-03 max=8.339872e-04 mean=-6.437690e-07 std=4.298415e-05
+  B19_C6       type=eeg      min=-1.051984e-03 max=8.519870e-04 mean=6.844601e-07 std=3.955134e-05
+  B20_T8       type=eeg      min=-1.051484e-03 max=8.414872e-04 mean=1.151716e-06 std=4.243865e-05
+  B21_TP8      type=eeg      min=-1.065984e-03 max=8.364872e-04 mean=3.163515e-07 std=4.038496e-05
+  B22_CP6      type=eeg      min=-1.063984e-03 max=8.509870e-04 mean=8.351154e-07 std=3.842310e-05
+  B23_CP4      type=eeg      min=-1.051484e-03 max=8.414872e-04 mean=-1.197114e-06 std=3.624478e-05
+  B24_CP2      type=eeg      min=-1.066484e-03 max=8.424871e-04 mean=-7.863271e-07 std=3.844632e-05
+  B25_P2       type=eeg      min=-1.077484e-03 max=8.334873e-04 mean=-6.453685e-07 std=3.653004e-05
+  B26_P4       type=eeg      min=-1.077484e-03 max=8.439871e-04 mean=-1.518252e-06 std=3.663424e-05
+  B27_P6       type=eeg      min=-1.071984e-03 max=8.324873e-04 mean=-6.169833e-07 std=4.129009e-05
+  B28_P8       type=eeg      min=-1.076984e-03 max=8.329873e-04 mean=-2.834577e-07 std=3.916826e-05
+  B29_P10      type=eeg      min=-1.062984e-03 max=8.474871e-04 mean=-9.428630e-07 std=3.814985e-05
+  B30_PO8      type=eeg      min=-1.074984e-03 max=8.394872e-04 mean=-8.166341e-07 std=3.857197e-05
+  B31_PO4      type=eeg      min=-1.075984e-03 max=8.244874e-04 mean=-8.591029e-07 std=3.805310e-05
+  B32_O2       type=eeg      min=-1.071984e-03 max=8.399872e-04 mean=-9.411138e-07 std=3.650233e-05
+  A1           type=misc     min=-1.062984e-03 max=8.284874e-04 mean=1.541579e-06 std=4.780195e-05
+  A2           type=misc     min=-1.079984e-03 max=8.434871e-04 mean=2.165219e-06 std=4.758642e-05
+  LOC          type=eog      min=-1.025984e-03 max=7.944879e-04 mean=1.340203e-06 std=4.894226e-05
+  ROC          type=eog      min=-1.080984e-03 max=8.574869e-04 mean=2.041255e-06 std=4.828367e-05
+  EMG1         type=emg      min=-1.085983e-03 max=8.214875e-04 mean=1.725735e-07 std=4.540263e-05
+  EMG2         type=emg      min=-1.043484e-03 max=8.774866e-04 mean=1.370419e-06 std=4.561395e-05
+  ECG1         type=ecg      min=-1.203982e-03 max=3.036954e-03 mean=9.137215e-07 std=2.852683e-04
+  ECG2         type=ecg      min=-2.011969e-03 max=1.348479e-03 mean=9.059552e-07 std=5.036645e-05
+  Status       type=stim     min=0.000000e+00 max=0.000000e+00 mean=0.000000e+00 std=0.000000e+00
+
+==========================================================================================
+RECORDING 2: BRAinDECODE ENTRY
+==========================================================================================
+Entry class                   : EEGDashRaw
+Entry length                  : <bound method EEGDashRaw.__len__ of <EEGDashRaw | 73 ch (EEG) | 512.0 Hz | 2846720 samples (5560.0 s)>
+  description: subject=106, task=rest, sex=f, group=WAKE, session=nan, run=nan, age=nan, gender=nan
+  (Data not loaded yet — info derived from record metadata.)>
+Description                   : subject     106
+task       rest
+sex           f
+group      WAKE
+session     NaN
+run         NaN
+age         NaN
+gender      NaN
+dtype: str
+
+Entry attributes:
+['bids_root', 'bidspath', 'cache_dir', 'description', 'filecache', 'raw', 'raw_preproc_kwargs', 'record', 'return_ch_pos', 's3file', 'set_description', 'target_name', 'transform']
+[2;36m[10/14/26 22:17:29][0m[2;36m [0m[33mWARNING [0m File not found on S3, skipping: s3:[35m/[0m[35m/openneuro.org/ds006576/sub-106/eeg/[0m[95msub-106_task-rest_eeg.dat[0m                                                               ]8;id=7475563;file:///home/arielalves/Undergrad-Research-EEG-FM/.venv/lib/python3.12/site-packages/eegdash/downloader.py\[2mdownloader.py[0m]8;;\[2m:[0m]8;id=7475564;file:///home/arielalves/Undergrad-Research-EEG-FM/.venv/lib/python3.12/site-packages/eegdash/downloader.py#286\[2m286[0m]8;;\
+
+==========================================================================================
+RECORDING 2: MNE INFORMATION
+==========================================================================================
+Python type                   : RawBrainVision
+Number of channels            : 73
+Sampling frequency (Hz)       : 512.0
+Number of samples             : 2846720
+Duration (seconds)            : 5559.998046875
+First sample                  : 0
+Last sample                   : 2846719
+Measurement date              : None
+Channel names                 : ['A1_Fp1', 'A2_AF7', 'A3_AF3', 'A4_F1', 'A5_F3', 'A6_F5', 'A7_F7', 'A8_FT7', 'A9_FC5', 'A10_FC3', 'A11_FC1', 'A12_C1', 'A13_C3', 'A14_C5', 'A15_T7', 'A16_TP7', 'A17_CP5', 'A18_CP3', 'A19_CP1', 'A20_CPz', 'A21_Pz', 'A22_P1', 'A23_P3', 'A24_P5', 'A25_P7', 'A26_P9', 'A27_PO7', 'A28_PO3', 'A29_POz', 'A30_O1', 'A31_Oz', 'A32_Iz', 'B1_Fpz', 'B2_Fp2', 'B3_AF8', 'B4_AF4', 'B5_AFz', 'B6_Fz', 'B7_F2', 'B8_F4', 'B9_F6', 'B10_F8', 'B11_FT8', 'B12_FC6', 'B13_FC4', 'B14_FC2', 'B15_FCz', 'B16_Cz', 'B17_C2', 'B18_C4', 'B19_C6', 'B20_T8', 'B21_TP8', 'B22_CP6', 'B23_CP4', 'B24_CP2', 'B25_P2', 'B26_P4', 'B27_P6', 'B28_P8', 'B29_P10', 'B30_PO8', 'B31_PO4', 'B32_O2', 'A1', 'A2', 'LOC', 'ROC', 'EMG1', 'EMG2', 'ECG1', 'ECG2', 'Status']
+
+Full MNE Info:
+<Info | 9 non-empty values
+ bads: []
+ ch_names: A1_Fp1, A2_AF7, A3_AF3, A4_F1, A5_F3, A6_F5, A7_F7, A8_FT7, ...
+ chs: 64 EEG, 2 misc, 2 EOG, 2 EMG, 2 ECG, 1 Stimulus
+ custom_ref_applied: False
+ highpass: 0.0 Hz
+ line_freq: 60.0
+ lowpass: 256.0 Hz
+ meas_date: unspecified
+ nchan: 73
+ projs: []
+ sfreq: 512.0 Hz
+ subject_info: <subject_info | >
+>
+
+Channel types:
+['eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'eeg', 'misc', 'misc', 'eog', 'eog', 'emg', 'emg', 'ecg', 'ecg', 'stim']
+
+Channel counts by type:
+  ecg: 2
+  eeg: 64
+  emg: 2
+  eog: 2
+  misc: 2
+  stim: 1
+
+Montage:
+No montage assigned
+
+Annotations:
+No annotations
+
+Events derived from annotations:
+Event count                   : 0
+Event IDs                     : {}
+
+Signal statistics:
+  A1_Fp1       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.255329e-05 std=1.878089e-03
+  A2_AF7       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.413039e-05 std=1.866199e-03
+  A3_AF3       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.123316e-05 std=1.865018e-03
+  A4_F1        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.270273e-05 std=1.856750e-03
+  A5_F3        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.211388e-05 std=1.857908e-03
+  A6_F5        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.273340e-05 std=1.852052e-03
+  A7_F7        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.390424e-05 std=1.855767e-03
+  A8_FT7       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.243497e-05 std=1.869523e-03
+  A9_FC5       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.195822e-05 std=1.853407e-03
+  A10_FC3      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.121818e-05 std=1.852448e-03
+  A11_FC1      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.077193e-05 std=1.858698e-03
+  A12_C1       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.739116e-05 std=1.875775e-03
+  A13_C3       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.084961e-05 std=2.083452e-03
+  A14_C5       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.319626e-05 std=1.853282e-03
+  A15_T7       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=3.627568e-05 std=2.005004e-03
+  A16_TP7      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.657824e-05 std=1.874385e-03
+  A17_CP5      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.500746e-05 std=1.865825e-03
+  A18_CP3      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.157363e-05 std=1.855207e-03
+  A19_CP1      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.127082e-05 std=1.854410e-03
+  A20_CPz      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.552966e-05 std=1.869814e-03
+  A21_Pz       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.407362e-05 std=1.866947e-03
+  A22_P1       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.740317e-05 std=1.878991e-03
+  A23_P3       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.491097e-05 std=1.863454e-03
+  A24_P5       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=-9.802305e-05 std=3.450479e-03
+  A25_P7       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.299653e-05 std=1.864776e-03
+  A26_P9       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.380408e-05 std=1.870409e-03
+  A27_PO7      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.599993e-05 std=1.873256e-03
+  A28_PO3      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.754489e-05 std=1.876165e-03
+  A29_POz      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.515601e-05 std=1.868629e-03
+  A30_O1       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.773090e-05 std=1.876260e-03
+  A31_Oz       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.336364e-05 std=1.865985e-03
+  A32_Iz       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.305603e-05 std=1.863866e-03
+  B1_Fpz       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.334008e-05 std=1.885551e-03
+  B2_Fp2       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.754715e-05 std=1.874366e-03
+  B3_AF8       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.259304e-05 std=1.864751e-03
+  B4_AF4       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.372623e-05 std=1.866163e-03
+  B5_AFz       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.355806e-05 std=1.869196e-03
+  B6_Fz        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.087653e-05 std=1.850812e-03
+  B7_F2        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.611274e-05 std=1.873958e-03
+  B8_F4        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.312787e-05 std=1.861653e-03
+  B9_F6        type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.217357e-05 std=1.855272e-03
+  B10_F8       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.407204e-05 std=1.856183e-03
+  B11_FT8      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.432904e-05 std=1.862247e-03
+  B12_FC6      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.492513e-05 std=1.864012e-03
+  B13_FC4      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.586219e-05 std=1.872353e-03
+  B14_FC2      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.746790e-05 std=1.880017e-03
+  B15_FCz      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.138070e-05 std=1.854298e-03
+  B16_Cz       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.251270e-05 std=1.857934e-03
+  B17_C2       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.170507e-05 std=1.852436e-03
+  B18_C4       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.417451e-05 std=1.864146e-03
+  B19_C6       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.354527e-05 std=1.864534e-03
+  B20_T8       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.137310e-05 std=1.847296e-03
+  B21_TP8      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.282486e-05 std=1.855950e-03
+  B22_CP6      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.392192e-05 std=1.858894e-03
+  B23_CP4      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.348664e-05 std=1.860495e-03
+  B24_CP2      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.513348e-05 std=1.868035e-03
+  B25_P2       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.213872e-05 std=1.855141e-03
+  B26_P4       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.181473e-05 std=1.860192e-03
+  B27_P6       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.373068e-05 std=1.865453e-03
+  B28_P8       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.339822e-05 std=1.862977e-03
+  B29_P10      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=3.978918e-05 std=1.858143e-03
+  B30_PO8      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.571255e-05 std=1.864393e-03
+  B31_PO4      type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.280161e-05 std=1.861627e-03
+  B32_O2       type=eeg      min=-1.638375e-02 max=1.638325e-02 mean=4.251914e-05 std=1.863730e-03
+  A1           type=misc     min=-1.638375e-02 max=1.638325e-02 mean=5.956198e-05 std=2.332980e-03
+  A2           type=misc     min=-1.638375e-02 max=1.638325e-02 mean=4.218122e-05 std=1.845177e-03
+  LOC          type=eog      min=-1.638375e-02 max=1.638325e-02 mean=4.325558e-05 std=1.851843e-03
+  ROC          type=eog      min=-1.638375e-02 max=1.638325e-02 mean=4.315750e-05 std=1.851180e-03
+  EMG1         type=emg      min=-1.638375e-02 max=1.638325e-02 mean=4.275284e-05 std=1.860981e-03
+  EMG2         type=emg      min=-1.638375e-02 max=1.638325e-02 mean=4.350547e-05 std=1.857507e-03
+  ECG1         type=ecg      min=-1.638375e-02 max=1.638325e-02 mean=4.465360e-05 std=1.878029e-03
+  ECG2         type=ecg      min=-1.638375e-02 max=1.638325e-02 mean=4.270358e-05 std=1.853426e-03
+  Status       type=stim     min=0.000000e+00 max=0.000000e+00 mean=0.000000e+00 std=0.000000e+00
+
+==========================================================================================
+INSPECTION COMPLETE
+==========================================================================================
