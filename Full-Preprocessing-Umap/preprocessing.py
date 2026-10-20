@@ -46,6 +46,8 @@ class DatasetManager():
 
         self.DATA_DIR = Path("./data").resolve()
         self.DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        self.montage = ""
         pass
         #self.dataset_name = dataset
     
@@ -454,6 +456,57 @@ class DatasetManager():
 
         return raw
 
+    def __investigate_montage(self, raw: mne.io.Raw):
+        if(self.montage != ""):
+            raw.set_montage(self.montage)
+            return raw
+
+        channel_names = raw.ch_names
+        channel_types = raw.get_channel_types()
+        montages = mne.channels.get_builtin_montages(descriptions=False)
+
+        montages_not_matched = {}
+        montages_matched = []
+
+        for mnt in montages:
+            mnt_channels = mne.channels.make_standard_montage(mnt).ch_names
+            montages_not_matched[mnt] = []
+            
+            for name, ch_type in zip(channel_names, channel_types):
+                if ch_type == "eeg" and name not in mnt_channels:
+                    montages_not_matched[mnt].append(name)
+            
+            if len(montages_not_matched[mnt]) == 0:
+                montages_matched.append(mnt)
+        
+        if len(montages_matched) > 0:
+            if len(montages_matched) == 1:
+                print(f"Only one matched montage: {montages_matched[0]}. Applying montage.")
+                raw.set_montage(montages_matched[0])
+                self.montage = montages_matched[0]
+            else:
+                print(f"There are {len(montages_matched)} possible montages. Please select one:")
+                for i, mnt in enumerate(montages_matched):
+                    print(f"[{i}] {mnt}")
+
+                opt = -1
+                while opt < 0 or opt >= len(montages_matched):
+                    try:
+                        opt = int(input("Enter index: "))
+                    except ValueError:
+                        opt = -1
+
+                raw.set_montage(montages_matched[opt])
+                self.montage = montages_matched[opt]
+        else:
+            print("Not matched channels for each montage:")
+            for mnt, mnt_channels in montages_not_matched.items():
+                print(f"{mnt} : {mnt_channels}")
+            
+            assert False, "[ERROR] No matched montages. Please treat channel names."
+        
+        return raw
+
     def __psd_gen_before(self, raw:mne.io.Raw, sub_id:str, group:str, output_dir:str, sub_dir:str):
         """
         Receives raw input (mne.io.raw object). Generate PSD and PSD topomap.
@@ -529,7 +582,8 @@ class DatasetManager():
                 # 1. Channels treatment
                 Preprocessor(channels_treatment, apply_on_array=False),
                 # 2. Set montage
-                Preprocessor("set_montage", montage=montage, on_missing="ignore"),
+                # Preprocessor("set_montage", montage=montage, on_missing="ignore"),
+                Preprocessor(self.__investigate_montage, apply_on_array=False),
                 # 3. Verify NaN in eeg channels
                 Preprocessor(self.__verify_montage, apply_on_array=False),
                 # 4. PSD (Before)
@@ -658,27 +712,18 @@ class DatasetManager():
         }
 
         # Writes into json
-        params = None
-        with open(f"{output_dir}/params.json", "r") as f:
-            params = json.load(f)
-        
-        if(not params):
-            with open(f"{output_dir}/params.json", "w") as f:
-                json.dump(params, f, indent=4)
-        else:
-            print("Already existing params.json. Overwriting parameters and keeping dropped subjects")
 
-            params["l_freq"] = l_freq,
-            params["h_freq"] = h_freq,
-            params["down_freq"] = down_freq,
-            params["bad_ch_tolerance"] = bad_ch_tolerance,
-            params["ransac"] = ransac,
-            params["ica"] = ica,
-            params["window_size"] = window_size,
-            params["n_jobs"] = n_jobs,
-            params["ref_channels"] = ref_channels,
-            params["montage"] = montage,
-            params["treat_artifacts"] = treat_artifacts
+        try:
+            with open(f"{output_dir}/params.json", "r") as f:
+                loaded_params = json.load(f)
+                print("Already existing params.json. Overwriting parameters and keeping dropped subjects")
+                if("dropped" in loaded_params.keys()):
+                    params["dropped"] = loaded_params["dropped"]
+        except:
+            print("parameters.json not found. Creating new one.")
+
+        with open(f"{output_dir}/params.json", "w") as f:
+            json.dump(params, f, indent=4)
 
         # Paralell processing using joblib (isolated chunk processing)
 

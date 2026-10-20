@@ -2,8 +2,9 @@ from models_bench import BenchBrainomni
 from preprocessing import DatasetManager
 import mne
 
-DS_NAME = "ds006576" # (EEGDash) The role of REM sleep in neural differentiation of memories in the hippocampus -> montage="standard_1020"
+#DS_NAME = "ds006576" # (EEGDash) The role of REM sleep in neural differentiation of memories in the hippocampus -> montage="standard_1020"
 #DS_NAME = "ds007609" # (EEGDash) Resting-State EEG and Trait Anxiety -> montage="EGI_256"
+DS_NAME = "ds007537" # (OpenNeuro - EEGDash) A multimodal dataset of EEG, eye-tracking, and physiological signals during smartphone interaction -> 
 
 def default_ch_treatment(raw):
     return raw
@@ -16,6 +17,7 @@ def ds006576_ch_treatment(raw:mne.io.Raw):
 def test_preprocessing():
     dsManager = DatasetManager()
     dsManager.load_eegdash_dataset(DS_NAME.lower(), subject_limit=0) 
+    #dsManager.load_moabb_dataset(DS_NAME.lower(), subject_limit=0)
     #dsManager.inspect_dataset()
     dsManager.preprocess_and_window(
         output_dir = DS_NAME.upper(), 
@@ -80,5 +82,5 @@ def test_bench():
     benchBrainomni.umap()
 
 if __name__ == "__main__":
-    test_preprocessing()
+    #test_preprocessing()
     test_bench()
