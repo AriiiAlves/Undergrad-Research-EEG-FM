@@ -32,7 +32,7 @@ def test_preprocessing():
         n_jobs=1,
         ref_channels=[],
         overwrite=False,
-        montage="standard_1020",
+        montage="", # Auto-detect
         treat_artifacts=True
     )
 

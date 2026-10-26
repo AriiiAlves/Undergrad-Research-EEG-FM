@@ -232,8 +232,8 @@ class DatasetManager():
         self.__print_section("BRAinDECODE DATASET OVERVIEW")
         print("Inspecting dataset. It may take a while.")
 
-        output_file = f"{self.dataset_name}_inspection.txt"
-        output_path = Path(output_file).resolve()
+        output_file = Path(self.dataset_name.upper()) / f"{self.dataset_name}_inspection.txt"
+        output_path = output_file.resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Redirect all print() calls inside the inspection methods to the file.
@@ -373,8 +373,12 @@ class DatasetManager():
         has_eog = len(mne.pick_types(raw.info, meg=False, eeg=False, eog=True, ecg=False)) > 0
         has_ecg = len(mne.pick_types(raw.info, meg=False, eeg=False, eog=False, ecg=True)) > 0
 
+        # Nothing to remove without EOG/ECG channels (skips the costly ICA fit)
+        if(not has_eog and not has_ecg):
+            print("[Eliminate artifacts] No EOG/ECG channels found. Skipping")
+
         # ICA has a big computational cost
-        if(ica):
+        elif(ica):
             # Filtered copy for stable ICA decomposition (ICA performs poorly if trained on low-frequency drifts (< 1.0Hz)
             raw_ica = raw.copy().filter(l_freq=1.0, h_freq=None, fir_design="firwin", verbose="ERROR")
             ica = ICA(n_components=15, random_state=42, method="fastica")
@@ -406,8 +410,13 @@ class DatasetManager():
                 raw.add_proj(projs_ecg)
 
             raw.apply_proj()
-        
-        # Drop aux channels (non-eeg) (optimize memory use)
+
+        return raw
+
+    def __drop_aux_channels(self, raw:mne.io.Raw):
+        """
+        Receives raw input (mne.io.raw object). Drop aux channels (non-eeg) (optimize memory use).
+        """
         aux_channels = []
         for ch in raw.ch_names:
             if('eeg' not in raw.get_channel_types(picks=ch)): aux_channels.append(ch)
@@ -419,7 +428,7 @@ class DatasetManager():
         Receives raw input (mne.io.raw object). Take channels marked as bad (raw.info["bads"]) and interpolate them using nearby sensors.
         """
         if raw.info["bads"]:
-            raw.interpolate_bads(reset_bads=False) # Feedback of interpolated channels
+            raw.interpolate_bads(reset_bads=False) # Keeps bads marked so they stay visible in the PSD (after)
             # This info will be used to decide which records exclude/mantain
         return raw
 
@@ -507,9 +516,9 @@ class DatasetManager():
         
         return raw
 
-    def __psd_gen_before(self, raw:mne.io.Raw, sub_id:str, group:str, output_dir:str, sub_dir:str):
+    def __psd_gen(self, raw:mne.io.Raw, sub_id:str, group:str, output_dir:str, sub_dir:str):
         """
-        Receives raw input (mne.io.raw object). Generate PSD and PSD topomap.
+        Receives raw input (mne.io.raw object). Generate PSD and PSD topomap. Bad channels are kept in the PSD plot.
         """
         psd_dir = Path(output_dir) / "subjects-analysis" / sub_dir
         psd_dir.mkdir(parents=True, exist_ok=True)
@@ -523,6 +532,20 @@ class DatasetManager():
         fig1.savefig(psd_dir / f"psd_{sub_id}_{sub_dir}.png", dpi=150, bbox_inches="tight") # DPI 150 economiza espaço/tempo
         fig2.savefig(psd_dir / f"psd_topomap_{sub_id}_{sub_dir}.png", dpi=150, bbox_inches="tight")
         plt.close('all')
+
+    def __record_dropped(self, output_dir:str, sub_id:str, info:dict):
+        """
+        Record a dropped subject (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
+        """
+        with open(f"{output_dir}/params.json", "r") as f:
+            params = json.load(f)
+
+        # Initialize the key if it doesn't exist
+        params.setdefault("dropped", {})
+        params["dropped"][str(sub_id)] = info
+
+        with open(f"{output_dir}/params.json", "w") as f:
+            json.dump(params, f, indent=4)
 
 
     def __process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, record_idx):
@@ -574,76 +597,77 @@ class DatasetManager():
 
             # 2. Pipeline de pré-processamento aplicado isoladamente ao registro
             single_ds = BaseConcatDataset([record])
-            
+            group = record.description.get('group', '')
+
+            # Stage 1: channel setup and bad channel detection
             preprocess(
                 single_ds,
                 [
                 # Note: if apply_on_array=False, passes raw object. If not, passes raw underlying NumPy array.
                 # 1. Channels treatment
                 Preprocessor(channels_treatment, apply_on_array=False),
-                # 2. Set montage
-                # Preprocessor("set_montage", montage=montage, on_missing="ignore"),
+                # 2. Set montage (fixed if montage != "", otherwise auto-detected)
                 Preprocessor(self.__investigate_montage, apply_on_array=False),
                 # 3. Verify NaN in eeg channels
                 Preprocessor(self.__verify_montage, apply_on_array=False),
                 # 4. PSD (Before)
-                Preprocessor(self.__psd_gen_before, 
-                             sub_id=sub_id, 
-                             group=record.description.get('group', ''), 
+                Preprocessor(self.__psd_gen,
+                             sub_id=sub_id,
+                             group=group,
                              output_dir=output_dir, sub_dir="before", apply_on_array=False),
                 # 5. Detect bad channels
                 Preprocessor(self.__auto_detect_bads, ransac=ransac, apply_on_array=False),
-                # 6. Interpolate bad channels
-                Preprocessor(self.__interpolate_bads_if_any, apply_on_array=False),
-                # 7. Eliminate EOG/ECG artifacts
-                Preprocessor(self.__eliminate_artifacts, run=treat_artifacts, ica=ica, apply_on_array=False),
-                # 8. Set A1/A2 reference
-                Preprocessor(self.__define_reference, ref_channels=ref_channels, apply_on_array=False),
-                # 9. Band-pass filter
-                Preprocessor(
-                    "filter",
-                    l_freq=l_freq,
-                    h_freq=h_freq,
-                    method="fir",
-                    fir_design="firwin",
-                ),
-                # 10. Downsampling
-                Preprocessor("resample", sfreq=down_freq),
-                # 11. PSD (After)
-                Preprocessor(self.__psd_gen_before, 
-                             sub_id=sub_id, 
-                             group=record.description.get('group', ''), 
-                             output_dir=output_dir, 
-                             sub_dir="after", apply_on_array=False),
                 ],
             )
 
-            # Validates good recordings (by tolerance of bad ch)
+            # Validates good recordings (by tolerance of bad ch) before the heavy processing
             ch_bads = len(record.raw.info["bads"])
-            ch_total = len(record.raw.ch_names)
+            ch_total = len(mne.pick_types(record.raw.info, eeg=True, exclude=[]))
             if ch_bads > int(ch_total * bad_ch_tolerance):
                 print(f"-> Dropping subject {sub_id} (Too many bad channels: {ch_bads}/{ch_total})")
 
-                # Writes into json
-                params = None
-                with open(f"{output_dir}/params.json", "r") as f:
-                    params = json.load(f)
-
-                # Initialize the key if it doesn't exist
-                params.setdefault("dropped", {})
                 # Record the reason for dropping the subject
-                params["dropped"][str(sub_id)] = {
+                self.__record_dropped(output_dir, sub_id, {
                     "reason": "Too many bad channels",
                     "bad_channels": record.raw.info["bads"],
                     "n_bad_channels": ch_bads,
                     "n_total_channels": ch_total,
-                }
-
-                with open(f"{output_dir}/params.json", "w") as f:
-                    json.dump(params, f, indent=4)
+                })
 
                 return False
             else:
+                # Stage 2: artifact removal, interpolation, reference, filtering and resampling
+                preprocess(
+                    single_ds,
+                    [
+                    # 6. Eliminate EOG/ECG artifacts (ICA is fit on good channels only, so it runs before interpolation)
+                    Preprocessor(self.__eliminate_artifacts, run=treat_artifacts, ica=ica, apply_on_array=False),
+                    # 7. Drop aux channels (non-eeg)
+                    Preprocessor(self.__drop_aux_channels, apply_on_array=False),
+                    # 8. Interpolate bad channels (rebuilt from the artifact-free neighbors)
+                    Preprocessor(self.__interpolate_bads_if_any, apply_on_array=False),
+                    # 9. Set A1/A2 reference
+                    Preprocessor(self.__define_reference, ref_channels=ref_channels, apply_on_array=False),
+                    # 10. Band-pass filter
+                    Preprocessor(
+                        "filter",
+                        l_freq=l_freq,
+                        h_freq=h_freq,
+                        method="fir",
+                        fir_design="firwin",
+                    ),
+                    # 11. Downsampling
+                    Preprocessor("resample", sfreq=down_freq),
+                    # 12. PSD (After)
+                    Preprocessor(self.__psd_gen,
+                                 sub_id=sub_id,
+                                 group=group,
+                                 output_dir=output_dir,
+                                 sub_dir="after", apply_on_array=False),
+                    ],
+                )
+
+
                 # Windowing and immediate recording saving -> Save by subject avoids accumulate very many window recording in RAM
                 windows = create_fixed_length_windows(
                     single_ds,
@@ -661,11 +685,20 @@ class DatasetManager():
 
         except Exception as e:
             print(f"\n[ERROR] Failed processing subject {sub_id}: {e}\n")
+            # Record the error, so the subject is skipped on the next run (use overwrite=True to retry)
+            self.__record_dropped(output_dir, sub_id, {
+                "reason": "Processing error",
+                "error": str(e),
+            })
             return False
         finally:
             # Agressive cleanup by subject
             del single_ds
             del windows
+            plt.close('all')
+
+            # Release the preprocessed raw (the dataset keeps a reference to each record, so it would stay in RAM)
+            record.raw = None
 
             # self.__print_section(f"filenames for {sub_id}: {record.raw.filenames}")
             # if hasattr(record, 'raw') and record.raw is not None:
@@ -687,12 +720,15 @@ class DatasetManager():
         n_jobs:int=4, 
         ref_channels:list[str]=[], 
         overwrite:bool=False,
-        montage:str="standard_1020",
+        montage:str="",
         treat_artifacts:bool=True):
         """
         Main function for optimized large dataset paralell processing.
         """
         os.makedirs(output_dir, exist_ok=True)
+
+        # Fixed montage (if montage="", it is auto-detected from the channel names of the first subject)
+        self.montage = montage
         
         print(f"[Batch Preprocessing] Starting batch processing of {len(self.dataset.datasets)} subjects with n_jobs={n_jobs}...")
 
