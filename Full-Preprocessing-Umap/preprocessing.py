@@ -22,6 +22,7 @@ from pyprep.find_noisy_channels import NoisyChannels
 from mne.preprocessing import ICA, compute_proj_eog, compute_proj_ecg
 # Paralelism
 import joblib
+from filelock import FileLock
 # Forces matplotlib as MNE browser backend
 mne.viz.set_browser_backend("matplotlib")
 # Function types
@@ -46,6 +47,9 @@ class DatasetManager():
 
         self.DATA_DIR = Path("./data").resolve()
         self.DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        self.DATASETS_DIR = Path("./PreProcessed-Datasets").resolve()
+        self.DATASETS_DIR.mkdir(parents=True, exist_ok=True)
 
         self.montage = ""
         pass
@@ -219,10 +223,7 @@ class DatasetManager():
         """
         Inspect the Braindecode dataset and write the report to a text file.
 
-        Parameters
-        ----------
-        output_file : str
-            Destination path for the inspection report.
+        The report is saved in PreProcessed-Datasets/<DATASET_NAME>/<dataset_name>_inspection.txt. Returns its path.
         """
         if self.dataset is None:
             raise ValueError(
@@ -232,7 +233,7 @@ class DatasetManager():
         self.__print_section("BRAinDECODE DATASET OVERVIEW")
         print("Inspecting dataset. It may take a while.")
 
-        output_file = Path(self.dataset_name.upper()) / f"{self.dataset_name}_inspection.txt"
+        output_file = self.DATASETS_DIR / self.dataset_name.upper() / f"{self.dataset_name}_inspection.txt"
         output_path = output_file.resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -306,7 +307,8 @@ class DatasetManager():
 
     # -------------------------------- DATASET LOADER --------------------------------
     def load_moabb_dataset(self, dataset:str, subject_limit:int=0):
-        assert dataset in self.get_datasets(), "[ERROR] Dataset does not exist in MOABB database."
+        # dataset_search() returns dataset objects, so compare by class name (e.g. "BNCI2014_001")
+        assert dataset in [type(ds).__name__ for ds in self.get_moabb_datasets()], "[ERROR] Dataset does not exist in MOABB database."
 
         set_download_dir(str(self.DATA_DIR))
 
@@ -520,7 +522,7 @@ class DatasetManager():
         """
         Receives raw input (mne.io.raw object). Generate PSD and PSD topomap. Bad channels are kept in the PSD plot.
         """
-        psd_dir = Path(output_dir) / "subjects-analysis" / sub_dir
+        psd_dir = self.DATASETS_DIR / output_dir / "Recordings-PSDs" / sub_dir
         psd_dir.mkdir(parents=True, exist_ok=True)
         
         psd = raw.compute_psd(verbose=False)
@@ -537,25 +539,34 @@ class DatasetManager():
         """
         Record a dropped subject (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
         """
-        with open(f"{output_dir}/params.json", "r") as f:
-            params = json.load(f)
+        params_path = self.DATASETS_DIR / output_dir / "params.json"
 
-        # Initialize the key if it doesn't exist
-        params.setdefault("dropped", {})
-        params["dropped"][str(sub_id)] = info
+        # Lock, so parallel workers don't overwrite each other's changes
+        with FileLock(f"{params_path}.lock"):
+            with open(params_path, "r") as f:
+                params = json.load(f)
 
-        with open(f"{output_dir}/params.json", "w") as f:
-            json.dump(params, f, indent=4)
+            # Initialize the key if it doesn't exist
+            params.setdefault("dropped", {})
+            params["dropped"][str(sub_id)] = info
 
+            with open(params_path, "w") as f:
+                json.dump(params, f, indent=4)
 
-    def __process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, record_idx):
+    # Static: it is sent to the joblib workers, and private (__) non-static methods can't be pickled
+    @staticmethod
+    def __default_ch_treatment(raw):
+        return raw
+
+    # Single underscore: name-mangled (__) methods can't be pickled and sent to joblib workers
+    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, record_idx):
         """
         Process a single subject, saving the result directly on disk to save RAM/VRAM
         """
         sub_id = record.description.get('subject', 'unknown')
         self.__print_section(f"PROCESSING SUBJECT: {sub_id}")
 
-        subject_path = Path(output_dir) / "pre-processed-eeg"
+        subject_path = self.DATASETS_DIR / output_dir / "PreProcessed-EEG"
         subject_path.mkdir(parents=True, exist_ok=True)
 
         for folder in subject_path.iterdir():
@@ -579,10 +590,12 @@ class DatasetManager():
                         print(f"Error reading {folder.name}: {e}")
         
         if(not overwrite):
-            with open(f"{output_dir}/params.json", "r") as f:
+            # Lock, so it doesn't read params.json while another worker is writing it
+            params_path = self.DATASETS_DIR / output_dir / "params.json"
+            with FileLock(f"{params_path}.lock"), open(params_path, "r") as f:
                 params = json.load(f)
                 if("dropped" in params.keys() and str(sub_id) in params["dropped"].keys()):
-                    print(f"Found subject {sub_id} in dropped subjects ({output_dir}/params.json). Skipping...")
+                    print(f"Found subject {sub_id} in dropped subjects ({params_path}). Skipping...")
                     return True
 
         # Var initializing (if subject got dropped, assure the variables to be deleted exist)
@@ -709,7 +722,7 @@ class DatasetManager():
     def preprocess_and_window(
         self,
         output_dir:str, 
-        channels_treatment:Callable, 
+        channels_treatment:Callable=None, 
         l_freq:float=1, 
         h_freq:float=40, 
         down_freq:float=200, 
@@ -725,11 +738,20 @@ class DatasetManager():
         """
         Main function for optimized large dataset paralell processing.
         """
-        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(self.DATASETS_DIR / output_dir, exist_ok=True)
 
         # Fixed montage (if montage="", it is auto-detected from the channel names of the first subject)
         self.montage = montage
-        
+
+        # Set default channel treatment
+        if(channels_treatment is None): channels_treatment = self.__default_ch_treatment
+
+        # Auto-detect the montage here, once: workers can't ask for input() and don't share self.montage
+        if(self.montage == ""):
+            first_record = self.dataset.datasets[0]
+            self.__investigate_montage(channels_treatment(first_record.raw.copy()))
+            first_record.raw = None # Release it (it is lazily reloaded when processed)
+
         print(f"[Batch Preprocessing] Starting batch processing of {len(self.dataset.datasets)} subjects with n_jobs={n_jobs}...")
 
         # Saving preprocessing parameters in json
@@ -743,65 +765,56 @@ class DatasetManager():
             "window_size":window_size,
             "n_jobs":n_jobs,
             "ref_channels":ref_channels,
-            "montage": montage,
+            "montage": self.montage,
             "treat_artifacts":treat_artifacts
         }
 
         # Writes into json
-
         try:
-            with open(f"{output_dir}/params.json", "r") as f:
+            with open(f"{self.DATASETS_DIR}/{output_dir}/params.json", "r") as f:
                 loaded_params = json.load(f)
                 print("Already existing params.json. Overwriting parameters and keeping dropped subjects")
                 if("dropped" in loaded_params.keys()):
                     params["dropped"] = loaded_params["dropped"]
-        except:
-            print("parameters.json not found. Creating new one.")
+        except FileNotFoundError: # Other errors (e.g. corrupted json) must stop, or the dropped subjects would be lost
+            print("params.json not found. Creating new one.")
 
-        with open(f"{output_dir}/params.json", "w") as f:
+        with open(f"{self.DATASETS_DIR}/{output_dir}/params.json", "w") as f:
             json.dump(params, f, indent=4)
 
-        # Paralell processing using joblib (isolated chunk processing)
+        # Lock file used by FileLock in the workers (deleted when finished)
+        lock_path = self.DATASETS_DIR / output_dir / "params.json.lock"
+        with open(lock_path, "w") as f:
+            f.write("temporary file for params.json overwriting control when using workers")
 
-        # results = joblib.Parallel(n_jobs=n_jobs, backend='loky')(
-        #     joblib.delayed(self.__process_single_subject)(
-        #         record=record, 
-        #         output_dir=output_dir, 
-        #         channels_treatment=channels_treatment, 
-        #         l_freq=l_freq, 
-        #         h_freq=h_freq, 
-        #         down_freq=down_freq, 
-        #         bad_ch_tolerance=bad_ch_tolerance, 
-        #         ransac=ransac,
-        #         ica=ica, 
-        #         window_size=window_size, 
-        #         ref_channels=ref_channels,
-        #         overwrite=overwrite,
-        #         montage=montage,
-        #         treat_artifacts=treat_artifacts,
-        #         record_idx=record_idx
-        #     )
-        #     for record_idx, record in enumerate(self.dataset.datasets)
-        # )
+        # Paralell processing using joblib (isolated chunk processing). n_jobs=1 runs sequentially in this process
 
-        # Common processing
-        for record_idx, record in enumerate(self.dataset.datasets):
-            self.__process_single_subject(
-                record=record, 
-                output_dir=output_dir, 
-                channels_treatment=channels_treatment, 
-                l_freq=l_freq, 
-                h_freq=h_freq, 
-                down_freq=down_freq, 
-                bad_ch_tolerance=bad_ch_tolerance, 
-                ransac=ransac,
-                ica=ica, 
-                window_size=window_size, 
-                ref_channels=ref_channels,
-                overwrite=overwrite,
-                montage=montage,
-                treat_artifacts=treat_artifacts,
-                record_idx=record_idx
+        # Detach the dataset while the workers run (self is sent to every worker, so it would be copied once per subject)
+        dataset = self.dataset
+        self.dataset = None
+        try:
+            results = joblib.Parallel(n_jobs=n_jobs, backend='loky')(
+                joblib.delayed(self._process_single_subject)(
+                    record=record,
+                    output_dir=output_dir,
+                    channels_treatment=channels_treatment,
+                    l_freq=l_freq,
+                    h_freq=h_freq,
+                    down_freq=down_freq,
+                    bad_ch_tolerance=bad_ch_tolerance,
+                    ransac=ransac,
+                    ica=ica,
+                    window_size=window_size,
+                    ref_channels=ref_channels,
+                    overwrite=overwrite,
+                    montage=montage,
+                    treat_artifacts=treat_artifacts,
+                    record_idx=record_idx
+                )
+                for record_idx, record in enumerate(dataset.datasets)
             )
+        finally:
+            self.dataset = dataset
+            lock_path.unlink(missing_ok=True)
 
-        #print(f"Finished Processing. Succesfully processed subjects: {sum(results)}/{len(self.dataset.datasets)}")
+        print(f"Finished Processing. Succesfully processed subjects: {sum(results)}/{len(self.dataset.datasets)}")
