@@ -51,9 +51,7 @@ class DatasetManager():
         self.DATASETS_DIR = Path("./PreProcessed-Datasets").resolve()
         self.DATASETS_DIR.mkdir(parents=True, exist_ok=True)
 
-        self.montage = ""
-        pass
-        #self.dataset_name = dataset
+        self.montage = None
     
     # -------------------------------- DATASET DATABASE INFO --------------------------------
     def get_moabb_datasets(self):
@@ -468,7 +466,7 @@ class DatasetManager():
         return raw
 
     def __investigate_montage(self, raw: mne.io.Raw):
-        if(self.montage != ""):
+        if(self.montage):
             raw.set_montage(self.montage)
             return raw
 
@@ -740,14 +738,14 @@ class DatasetManager():
         """
         os.makedirs(self.DATASETS_DIR / output_dir, exist_ok=True)
 
-        # Fixed montage (if montage="", it is auto-detected from the channel names of the first subject)
-        self.montage = montage
-
         # Set default channel treatment
         if(channels_treatment is None): channels_treatment = self.__default_ch_treatment
 
+        # Fixed montage (if given)
+        if(montage): self.montage = montage
+
         # Auto-detect the montage here, once: workers can't ask for input() and don't share self.montage
-        if(self.montage == ""):
+        if(not self.montage):
             first_record = self.dataset.datasets[0]
             self.__investigate_montage(channels_treatment(first_record.raw.copy()))
             first_record.raw = None # Release it (it is lazily reloaded when processed)
@@ -776,6 +774,19 @@ class DatasetManager():
                 print("Already existing params.json. Overwriting parameters and keeping dropped subjects")
                 if("dropped" in loaded_params.keys()):
                     params["dropped"] = loaded_params["dropped"]
+
+                # Logic if params.json already has a montage
+                old_montage = loaded_params.get("montage")
+                if(old_montage and self.montage != old_montage):
+                    r = None
+                    while(r != "y" and r != "n"):
+                        r = str(input(f"The dataset was preprocessed with the following old montage: {old_montage}. do you want to overwrite it with {self.montage}? (all the previous processed recordings will be overwrited) (y/n): ")).lower()
+                    if(r == "y"):
+                        overwrite = True
+                    else:
+                        self.montage = old_montage
+
+                    params["montage"] = self.montage
         except FileNotFoundError: # Other errors (e.g. corrupted json) must stop, or the dropped subjects would be lost
             print("params.json not found. Creating new one.")
 
