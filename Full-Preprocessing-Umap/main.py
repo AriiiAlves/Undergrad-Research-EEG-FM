@@ -14,18 +14,18 @@ def ds006576_ch_treatment(raw:mne.io.Raw):
     return raw
 
 def preprocess():
-    dsManager = DatasetManager()
     for DS_NAME in DS_NAMES:
+        dsManager = DatasetManager()
         dsManager.load_eegdash_dataset(DS_NAME.lower(), subject_limit=0) 
         #dsManager.load_moabb_dataset(DS_NAME.lower(), subject_limit=0)
         #dsManager.inspect_dataset()
         dsManager.preprocess_and_window(
-            output_dir = DS_NAME1.upper(), 
+            output_dir = DS_NAME.upper(), 
             channels_treatment = ds006576_ch_treatment if DS_NAME == DS_NAME1 else None,
             l_freq = 0.1, # minimal floor l_freq of models.
             h_freq = 75, # Minimal ceil h_freq of models.
             down_freq = 256, # The models needs 200Hz-256Hz. So, i'm setting the maximum here.
-            notch_filter = [50, 60], # Remove both problematic frequencies
+            notch_freqs = [50, 60], # Remove both problematic frequencies
             bad_ch_tolerance = 0.2,
             ransac = True,
             ica = True,
@@ -40,7 +40,7 @@ def preprocess():
 
 def bench():
     for DS_NAME in DS_NAMES: 
-        base_windows_path = f"/exp/arielalves/Undergrad-Research-EEG-FM/Full-Preprocessing-Umap/PreProcessed-Datasets/{DS_NAME.upper()}/PreProcessed-EEG"
+        base_windows_path = f"./PreProcessed-Datasets/{DS_NAME.upper()}/PreProcessed-EEG"
 
         benchBrainomni = BenchBrainomni(base_windows_path, DS_NAME.upper())
         benchLabram = BenchLabram(base_windows_path, DS_NAME.upper())
