@@ -540,6 +540,14 @@ class DatasetManager():
             raw.apply_function(lambda x: x * value_multiplier, channel_wise=False) # Default picks: all data channels (bads included)
         return raw
 
+    def __notch_filter(self, raw:mne.io.Raw, notch_freqs:list[float]=[]):
+        # Removes power line noise. Frequencies above Nyquist can't be filtered (and have no noise to remove)
+        freqs = [f for f in notch_freqs if f < raw.info["sfreq"] / 2]
+        if(freqs):
+            raw.load_data()
+            raw.notch_filter(freqs=freqs, method="fir", fir_design="firwin")
+        return raw
+
     def __record_dropped(self, output_dir:str, sub_id:str, info:dict):
         """
         Record a dropped subject (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
@@ -564,7 +572,7 @@ class DatasetManager():
         return raw
 
     # Single underscore: name-mangled (__) methods can't be pickled and sent to joblib workers
-    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, value_multiplier, record_idx):
+    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, value_multiplier, notch_freqs, record_idx):
         """
         Process a single subject, saving the result directly on disk to save RAM/VRAM
         """
@@ -668,7 +676,9 @@ class DatasetManager():
                     Preprocessor(self.__interpolate_bads_if_any, apply_on_array=False),
                     # 10. Set A1/A2 reference
                     Preprocessor(self.__define_reference, ref_channels=ref_channels, apply_on_array=False),
-                    # 11. Band-pass filter
+                    # 11. Notch filter (power line noise)
+                    Preprocessor(self.__notch_filter, notch_freqs=notch_freqs, apply_on_array=False),
+                    # 12. Band-pass filter
                     Preprocessor(
                         "filter",
                         l_freq=l_freq,
@@ -676,9 +686,9 @@ class DatasetManager():
                         method="fir",
                         fir_design="firwin",
                     ),
-                    # 12. Downsampling
+                    # 13. Downsampling
                     Preprocessor("resample", sfreq=down_freq),
-                    # 13. PSD (After)
+                    # 14. PSD (After)
                     Preprocessor(self.__psd_gen,
                                  sub_id=sub_id,
                                  group=group,
@@ -742,7 +752,8 @@ class DatasetManager():
         overwrite:bool=False,
         montage:str="",
         treat_artifacts:bool=True,
-        value_multiplier:float=1.0):
+        value_multiplier:float=1.0,
+        notch_freqs:list[float]=[]): # Power line frequencies removed by notch filter (e.g. [50, 60]). Empty = no notch
         """
         Main function for optimized large dataset paralell processing.
         """
@@ -775,7 +786,8 @@ class DatasetManager():
             "ref_channels":ref_channels,
             "montage": self.montage,
             "treat_artifacts":treat_artifacts,
-            "value_multiplier":value_multiplier
+            "value_multiplier":value_multiplier,
+            "notch_freqs":notch_freqs
         }
 
         # Writes into json
@@ -832,6 +844,7 @@ class DatasetManager():
                     montage=montage,
                     treat_artifacts=treat_artifacts,
                     value_multiplier=value_multiplier,
+                    notch_freqs=notch_freqs,
                     record_idx=record_idx
                 )
                 for record_idx, record in enumerate(dataset.datasets)
