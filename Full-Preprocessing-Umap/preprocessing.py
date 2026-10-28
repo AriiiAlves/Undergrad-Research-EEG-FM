@@ -533,6 +533,13 @@ class DatasetManager():
         fig2.savefig(psd_dir / f"psd_topomap_{sub_id}_{sub_dir}.png", dpi=150, bbox_inches="tight")
         plt.close('all')
 
+    def __apply_multiplier(self, raw:mne.io.Raw, value_multiplier:float=1.0):
+        # Converts data units (e.g. 1e-6 for recordings stored in µV -> V, the MNE default)
+        if(value_multiplier != 1.0):
+            raw.load_data()
+            raw.apply_function(lambda x: x * value_multiplier, channel_wise=False) # Default picks: all data channels (bads included)
+        return raw
+
     def __record_dropped(self, output_dir:str, sub_id:str, info:dict):
         """
         Record a dropped subject (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
@@ -557,7 +564,7 @@ class DatasetManager():
         return raw
 
     # Single underscore: name-mangled (__) methods can't be pickled and sent to joblib workers
-    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, record_idx):
+    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, value_multiplier, record_idx):
         """
         Process a single subject, saving the result directly on disk to save RAM/VRAM
         """
@@ -621,12 +628,14 @@ class DatasetManager():
                 Preprocessor(self.__investigate_montage, apply_on_array=False),
                 # 3. Verify NaN in eeg channels
                 Preprocessor(self.__verify_montage, apply_on_array=False),
-                # 4. PSD (Before)
+                # 4. Values multiplier (unit conversion)
+                Preprocessor(self.__apply_multiplier, value_multiplier=value_multiplier, apply_on_array=False),
+                # 5. PSD (Before)
                 Preprocessor(self.__psd_gen,
                              sub_id=sub_id,
                              group=group,
                              output_dir=output_dir, sub_dir="before", apply_on_array=False),
-                # 5. Detect bad channels
+                # 6. Detect bad channels
                 Preprocessor(self.__auto_detect_bads, ransac=ransac, apply_on_array=False),
                 ],
             )
@@ -651,15 +660,15 @@ class DatasetManager():
                 preprocess(
                     single_ds,
                     [
-                    # 6. Eliminate EOG/ECG artifacts (ICA is fit on good channels only, so it runs before interpolation)
+                    # 7. Eliminate EOG/ECG artifacts (ICA is fit on good channels only, so it runs before interpolation)
                     Preprocessor(self.__eliminate_artifacts, run=treat_artifacts, ica=ica, apply_on_array=False),
-                    # 7. Drop aux channels (non-eeg)
+                    # 8. Drop aux channels (non-eeg)
                     Preprocessor(self.__drop_aux_channels, apply_on_array=False),
-                    # 8. Interpolate bad channels (rebuilt from the artifact-free neighbors)
+                    # 9. Interpolate bad channels (rebuilt from the artifact-free neighbors)
                     Preprocessor(self.__interpolate_bads_if_any, apply_on_array=False),
-                    # 9. Set A1/A2 reference
+                    # 10. Set A1/A2 reference
                     Preprocessor(self.__define_reference, ref_channels=ref_channels, apply_on_array=False),
-                    # 10. Band-pass filter
+                    # 11. Band-pass filter
                     Preprocessor(
                         "filter",
                         l_freq=l_freq,
@@ -667,9 +676,9 @@ class DatasetManager():
                         method="fir",
                         fir_design="firwin",
                     ),
-                    # 11. Downsampling
+                    # 12. Downsampling
                     Preprocessor("resample", sfreq=down_freq),
-                    # 12. PSD (After)
+                    # 13. PSD (After)
                     Preprocessor(self.__psd_gen,
                                  sub_id=sub_id,
                                  group=group,
@@ -727,12 +736,13 @@ class DatasetManager():
         bad_ch_tolerance:float=0.15, 
         ransac:bool=True, 
         ica:bool=True, 
-        window_size:int=512, 
+        window_size:int=512, # No overlapping, by default
         n_jobs:int=4, 
         ref_channels:list[str]=[], 
         overwrite:bool=False,
         montage:str="",
-        treat_artifacts:bool=True):
+        treat_artifacts:bool=True,
+        value_multiplier:float=1.0):
         """
         Main function for optimized large dataset paralell processing.
         """
@@ -764,7 +774,8 @@ class DatasetManager():
             "n_jobs":n_jobs,
             "ref_channels":ref_channels,
             "montage": self.montage,
-            "treat_artifacts":treat_artifacts
+            "treat_artifacts":treat_artifacts,
+            "value_multiplier":value_multiplier
         }
 
         # Writes into json
@@ -820,6 +831,7 @@ class DatasetManager():
                     overwrite=overwrite,
                     montage=montage,
                     treat_artifacts=treat_artifacts,
+                    value_multiplier=value_multiplier,
                     record_idx=record_idx
                 )
                 for record_idx, record in enumerate(dataset.datasets)
