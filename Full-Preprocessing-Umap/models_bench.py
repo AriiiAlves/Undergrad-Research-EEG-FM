@@ -6,6 +6,7 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from fractions import Fraction
+from datetime import datetime
 from braindecode.datautil import load_concat_dataset
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -59,9 +60,12 @@ class BenchModel():
         # Number of windows encoded at once (lower it if GPU runs out of memory)
         self.batch_size = batch_size
         # Load windows (lazy loading, saves RAM)
+        self.windows_path = windows_path
         assert Path(windows_path).is_dir(), f"{windows_path} is not a valid directory"
         self.loaded_windows = load_concat_dataset(path=Path(windows_path), preload=False)
         # Verify if the windows fit the model specifications (before loading/downloading the model)
+        self.warned_channel_sets = set() # Channel sets already reported by match_model_channels
+        self.channel_warnings = [] # Dropped/missing channels (saved in benchmark-info.json)
         self.verify_windows()
         # Variables (set by use_latent_space)
         self.mode = ""
@@ -90,6 +94,86 @@ class BenchModel():
         Indices of the channels the model can use (default: all).
         """
         return list(range(len(ch_names)))
+
+    @classmethod
+    def model_channels(cls) -> list[str] | None:
+        """
+        Channel names the model accepts (override). None: any channel.
+        """
+        return None
+
+    @classmethod
+    def expected_channels(cls) -> list[str] | None:
+        """
+        Prints and returns the channel names the model accepts (None: any channel). Classmethod: works without loading windows/model.
+        """
+        channels = cls.model_channels()
+        if channels is None:
+            print(f"[{cls.MODEL_NAME}] Expected channels: any (no channel restriction)")
+        else:
+            print(f"[{cls.MODEL_NAME}] Expected channels ({len(channels)}): {channels}")
+        return channels
+
+    def match_model_channels(self, ch_names: list[str]) -> dict[int, int]:
+        """
+        {index in ch_names: index in model_channels()} of the channels the model knows (case-insensitive name match).
+        Prints (once by channel set) the dropped channels and the model channels missing in the recording.
+        """
+        model_index = {ch.upper(): i for i, ch in enumerate(self.model_channels())}
+        matches = {i: model_index[ch.upper()] for i, ch in enumerate(ch_names) if ch.upper() in model_index}
+        if tuple(ch_names) not in self.warned_channel_sets:
+            self.warned_channel_sets.add(tuple(ch_names))
+            dropped = [ch for i, ch in enumerate(ch_names) if i not in matches]
+            missing = [ch for i, ch in enumerate(self.model_channels()) if i not in matches.values()]
+            if dropped:
+                self.channel_warnings.append(f"Channels not supported by the model (dropped): {dropped}")
+                print(f"[{self.MODEL_NAME}] {self.channel_warnings[-1]}")
+            if missing:
+                self.channel_warnings.append(f"Model channels missing in the recording ({len(missing)}/{len(model_index)}): {missing}")
+                print(f"[{self.MODEL_NAME}] [WARNING] {self.channel_warnings[-1]}")
+        return matches
+
+    # -------------------------------- BENCHMARK INFO --------------------------------
+    @classmethod
+    def update_benchmark_info(cls, ds_name, config=None, warnings=(), errors=(), reset=False):
+        """
+        Saves the config, warnings and errors of the benchmark of a dataset in BASE_DIR/MODEL_NAME/benchmark-info.json (one entry by dataset).
+        reset: starts the entry of the dataset again (new run). Classmethod: works even if the model could not be created.
+        """
+        path = Path(cls.BASE_DIR) / cls.MODEL_NAME / "benchmark-info.json"
+        os.makedirs(path.parent, exist_ok=True)
+        info = {}
+        if path.exists():
+            with open(path) as f:
+                info = json.load(f)
+        entry = {} if reset else info.get(ds_name, {})
+        if config is not None:
+            entry["config"] = config
+        entry["warnings"] = entry.get("warnings", []) + list(warnings)
+        entry["errors"] = entry.get("errors", []) + list(errors)
+        entry["status"] = "error" if entry["errors"] else "ok"
+        entry["updated"] = datetime.now().isoformat(timespec="seconds")
+        info[ds_name] = entry
+        with open(path, "w") as f:
+            json.dump(info, f, indent=4, default=str)
+
+    def benchmark_config(self):
+        """
+        Model input requirements and benchmark settings (as in params.json of the preprocessing).
+        """
+        return {
+            "model_name": self.MODEL_NAME,
+            "sfreq": self.SFREQ,
+            "window_size": self.WINDOW_SIZE,
+            "min_channels": self.MIN_CHANNELS,
+            "requires_positions": self.REQUIRES_POSITIONS,
+            "v_to_model": self.V_TO_MODEL,
+            "z_score": self.Z_SCORE,
+            "model_channels": self.model_channels(),
+            "batch_size": self.batch_size,
+            "device": str(self.device),
+            "windows_path": str(self.windows_path),
+        }
 
     # -------------------------------- WINDOW INFO --------------------------------
     @staticmethod
@@ -196,6 +280,7 @@ class BenchModel():
             print(f"[ERROR] {error}")
         print("=" * 50)
 
+        self.update_benchmark_info(self.DS_NAME, config=self.benchmark_config(), warnings=self.channel_warnings + warnings, errors=errors, reset=True)
         if errors:
             raise ValueError(f"[{self.MODEL_NAME}] Windows do not fit the model specifications ({len(errors)} errors). See the report above.")
 
@@ -639,13 +724,14 @@ class BenchLabram(BenchModel):
         from braindecode.models import Labram
         return Labram.from_pretrained("braindecode/labram-pretrained")
 
+    @classmethod
+    def model_channels(cls):
+        from braindecode.models.labram import LABRAM_CHANNEL_ORDER
+        return list(LABRAM_CHANNEL_ORDER)
+
     def select_channels(self, ch_names):
         # LaBraM selects its positional embeddings by channel name, so unknown channels are dropped
-        from braindecode.models.labram import LABRAM_CHANNEL_ORDER
-        known = {ch.upper() for ch in LABRAM_CHANNEL_ORDER}
-        dropped = [ch for ch in ch_names if ch.upper() not in known]
-        if dropped: print(f"[{self.MODEL_NAME}] Channels not supported by the model (dropped): {dropped}")
-        return [i for i, ch in enumerate(ch_names) if ch.upper() in known]
+        return list(self.match_model_channels(ch_names))
 
     def embed(self, x, window_ds):
         features = self.model(x, return_features=True, ch_names=self.current_ch_names)["features"]
@@ -680,3 +766,208 @@ class BenchCBraMod(BenchModel):
         features = self.model(x, return_features=True)["features"]
         # Calculates one embedding vector per window (mean over channel/patch tokens)
         return features.reshape(x.size(0), -1, features.size(-1)).mean(dim=1)
+
+class BenchBENDR(BenchModel):
+    """
+    Bench BENDR model. Paper Preprocessing Setup:
+
+    - Resample to 256 Hz
+    - 19 channels of the 10-20 system (fixed order) + 1 "SCALE" channel (relative amplitude of the window)
+    - Channels missing in the recording are filled with zeros (as in the DN3 Deep1010 mapping used to pre-train it)
+    - Each window min-max scaled to [-1, 1] (all channels together)
+
+    Features: output of the start token of the contextualizer (the aggregate token of the paper).
+    The SCALE channel uses the TUEG amplitude range (int16 in 0.1 µV: ±3276.8 µV) as the maximum (approximation of DN3).
+
+    Font: https://doi.org/10.3389/fnhum.2021.653659 | https://github.com/SPOClab-ca/BENDR
+    """
+    MODEL_NAME = "bendr"
+    SFREQ = 256
+    WINDOW_SIZE = 1024 # 4s (any length >= 96 samples works: the encoder downsamples by 96)
+    V_TO_MODEL = 1e6 # µV (only used by the SCALE channel: the min-max scaling makes the rest unit independent)
+    Z_SCORE = False
+    MAX_SCALE = 6553.6 # Amplitude range (µV) that maps to SCALE = 1
+
+    @classmethod
+    def model_channels(cls):
+        from braindecode.models.bendr import BENDR_CHANNEL_ORDER
+        return [ch for ch in BENDR_CHANNEL_ORDER if ch != "SCALE"]
+
+    def load_model(self):
+        from braindecode.models import BENDR
+        return BENDR.from_pretrained("braindecode/braindecode-bendr", n_times=self.WINDOW_SIZE, sfreq=self.SFREQ)
+
+    def select_channels(self, ch_names):
+        return list(self.match_model_channels(ch_names))
+
+    def embed(self, x, window_ds):
+        # Places each channel in its BENDR position (missing ones stay 0), then appends the SCALE channel
+        model_index = list(self.match_model_channels(self.current_ch_names).values())
+        full = torch.zeros(x.size(0), len(self.model_channels()), x.size(-1), device=x.device, dtype=x.dtype)
+        full[:, model_index] = x
+        low = full.amin(dim=(1, 2), keepdim=True)
+        high = full.amax(dim=(1, 2), keepdim=True)
+        scale = 2 * (torch.clamp((high - low) / self.MAX_SCALE, max=1.0) - 0.5)
+        full = 2 * (full - low) / (high - low + 1e-12) - 1
+        full = torch.cat([full, scale.expand(-1, 1, x.size(-1))], dim=1)
+        return self.model(full, return_features=True)["features"]
+
+class BenchBIOT(BenchModel):
+    """
+    Bench BIOT model ("six datasets" checkpoint). Paper Preprocessing Setup:
+
+    - Resample to 200 Hz
+    - 18 bipolar channels (TUH double banana + C3-A2, C4-A1). The recording must already have them (named e.g. "FP1-F7"):
+      unipolar recordings have no usable channel
+    - Window size: 10s
+    - Each channel divided by the 95th percentile of its absolute amplitude
+
+    Missing bipolar channels are dropped: BIOT tokenizes each channel separately (with its own channel embedding), so any subset works.
+
+    Font: https://arxiv.org/abs/2305.10351 | https://github.com/ycq091044/BIOT
+    """
+    MODEL_NAME = "biot"
+    SFREQ = 200
+    WINDOW_SIZE = 2000 # 10s
+    V_TO_MODEL = 1e6 # µV (irrelevant after the percentile scaling)
+    Z_SCORE = False
+
+    @classmethod
+    def model_channels(cls):
+        from braindecode.models.biot import BIOT_CHANNEL_ORDER
+        return BIOT_CHANNEL_ORDER
+
+    def load_model(self):
+        from braindecode.models import BIOT
+        return BIOT.from_pretrained("braindecode/biot-pretrained-six-datasets-18chs", n_times=self.WINDOW_SIZE)
+
+    def select_channels(self, ch_names):
+        return list(self.match_model_channels(ch_names))
+
+    def embed(self, x, window_ds):
+        x = x / (torch.quantile(x.abs(), 0.95, dim=-1, keepdim=True) + 1e-8)
+        # Same as BIOT encoder forward, but each channel gets the embedding of its BIOT position (not of its index in x)
+        encoder = self.model.encoder
+        model_index = list(self.match_model_channels(self.current_ch_names).values())
+        tokens = []
+        for i, channel in enumerate(model_index):
+            spec = encoder.patch_embedding(encoder.stft(x[:, i:i + 1, :]))
+            channel_token = encoder.channel_tokens(encoder.index[channel]).expand(spec.size(0), spec.size(1), -1)
+            tokens.append(encoder.positional_encoding(spec + channel_token))
+        return encoder.transformer(torch.cat(tokens, dim=1)).mean(dim=1)
+
+class BenchEEGPT(BenchModel):
+    """
+    Bench EEGPT model. Paper Preprocessing Setup:
+
+    - Resample to 256 Hz
+    - Window size: 4s (1024 samples)
+    - Set unit to mV
+    - Global average reference
+    - Channels: 62 of the 10-20 system (each one has a learned channel embedding, so any subset works)
+
+    Features: summary tokens of the encoder (4 x 512), averaged over the time patches.
+
+    Font: https://proceedings.neurips.cc/paper_files/paper/2024/hash/4540d267eeec4e5dbd9dae9448f0b739-Abstract-Conference.html
+    """
+    MODEL_NAME = "eegpt"
+    SFREQ = 256
+    WINDOW_SIZE = 1024 # 4s
+    V_TO_MODEL = 1e3 # EEGPT was pre-trained in mV
+    Z_SCORE = False
+
+    @classmethod
+    def model_channels(cls):
+        from braindecode.models.eegpt import EEGPT_CHANNELS
+        return EEGPT_CHANNELS
+
+    def load_model(self):
+        from braindecode.models import EEGPT
+        return EEGPT.from_pretrained("braindecode/eegpt-pretrained", n_times=self.WINDOW_SIZE, sfreq=self.SFREQ, chan_proj_type="none")
+
+    def select_channels(self, ch_names):
+        return list(self.match_model_channels(ch_names))
+
+    def embed(self, x, window_ds):
+        encoder = self.model.target_encoder
+        # The encoder accepts any subset of its channels (by channel id): only its shape check is fixed to the 62 channels
+        encoder.num_patches = (x.size(1), encoder.num_patches[1])
+        chan_ids = torch.tensor(list(self.match_model_channels(self.current_ch_names).values())).unsqueeze(0)
+        # z: [batch, n_patches, embed_num, embed_dim]
+        z = encoder(x, chan_ids)
+        return z.mean(dim=1).flatten(1)
+
+class BenchREVE(BenchModel):
+    """
+    Bench REVE model (base). Paper Preprocessing Setup:
+
+    - Bandpass filter: 0.5–99.5 Hz
+    - Resample to 200 Hz
+    - Z-score normalization, values clipped at 15 standard deviations
+    - Any channels: 4D positional encoding from the 3D electrode positions (montage) and time
+    - Input length: multiple of 1s
+
+    Weights under the REVE Responsible Use License (https://huggingface.co/brain-bzh/reve-base).
+
+    Font: https://arxiv.org/abs/2510.21585 | https://brain-bzh.github.io/reve/
+    """
+    MODEL_NAME = "reve"
+    REQUIRES_POSITIONS = True # Uses the 3D electrode positions as input
+    SFREQ = 200
+    WINDOW_SIZE = 2000 # 10s: patches of 200 samples with stride 180 cover it exactly (11 patches)
+    V_TO_MODEL = 1 # Unit is irrelevant after the z-score
+    Z_SCORE = True
+
+    def load_model(self):
+        from braindecode.models import REVE
+        # The position bank (downloaded at init) goes to the checkpoints folder instead of MNE_DATA
+        os.environ.setdefault("REVE_POSITIONS_PATH", str(Path(self.CHECKPOINTS_DIR).resolve()))
+        return REVE.from_pretrained("brain-bzh/reve-base", n_times=self.WINDOW_SIZE, sfreq=self.SFREQ, n_chans=1, n_outputs=1)
+
+    def embed(self, x, window_ds):
+        x = x.clamp(-15, 15)
+        # Electrode positions in meters (same frame as the REVE position bank)
+        pos = torch.tensor(window_ds.ch_pos[self.current_picks], dtype=torch.float32, device=self.device).unsqueeze(0).expand(x.size(0), -1, -1)
+        # features: [batch, n_chans, n_patches, embed_dim]
+        features = self.model(x, pos=pos, return_features=True)["features"]
+        return features.mean(dim=(1, 2))
+
+class BenchLUNA(BenchModel):
+    """
+    Bench LUNA model (base). Paper Preprocessing Setup:
+
+    - Bandpass filter: 0.1–75 Hz
+    - Notch filter: 50/60 Hz
+    - Resample to 256 Hz
+    - Window size: 5s non-overlapping
+    - Each channel of each window z-scored
+    - Any channels: learned queries unify the channels by cross-attention, using their 3D positions (montage)
+
+    Features: latent of the temporal encoder ([n_patches, n_queries x embed_dim]), averaged over the patches.
+    Weights under CC BY-ND 4.0 (https://huggingface.co/PulpBio/LUNA).
+
+    Font: https://arxiv.org/abs/2510.22257 | https://github.com/pulp-bio/BioFoundation
+    """
+    MODEL_NAME = "luna"
+    REQUIRES_POSITIONS = True # Uses the 3D electrode positions as input
+    SFREQ = 256
+    WINDOW_SIZE = 1280 # 5s (32 patches of 40 samples)
+    V_TO_MODEL = 1e6 # Unit is irrelevant after the z-score
+    Z_SCORE = True
+
+    def load_model(self):
+        from braindecode.models import LUNA
+        # n_outputs=0: pre-training (reconstruction) head, which is not used
+        return LUNA.from_pretrained("PulpBio/LUNA", filename="LUNA_base.safetensors", n_outputs=0, n_chans=1, n_times=self.WINDOW_SIZE,
+                                    embed_dim=64, num_queries=4, depth=8)
+
+    def embed(self, x, window_ds):
+        model = self.model
+        pos = torch.tensor(window_ds.ch_pos[self.current_picks], dtype=torch.float32, device=self.device).unsqueeze(0).expand(x.size(0), -1, -1)
+        # Same as LUNA forward up to the latent (before the decoder head)
+        tokens, _ = model.prepare_tokens(x, pos)
+        tokens, _ = model.cross_attn(tokens) # [batch * n_patches, n_queries, embed_dim]
+        latent = tokens.reshape(x.size(0), -1, tokens.size(1) * tokens.size(2))
+        for block in model.blocks:
+            latent = block(latent)
+        return model.norm(latent).mean(dim=1)
