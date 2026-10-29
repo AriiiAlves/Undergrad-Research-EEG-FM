@@ -29,7 +29,7 @@ mne.viz.set_browser_backend("matplotlib")
 from collections.abc import Callable
 # moabb
 from moabb.datasets.utils import dataset_search
-from braindecode.datasets import MOABBDataset
+from braindecode.datasets import MOABBDataset, TUH, TUHAbnormal, NMT, SleepPhysionet
 from moabb import set_download_dir
 # eegdash
 from eegdash import EEGDash
@@ -305,6 +305,10 @@ class DatasetManager():
 
     # -------------------------------- DATASET LOADER --------------------------------
     def load_moabb_dataset(self, dataset:str, subject_limit:int=0):
+        """
+        MOABB is a curated benchmark of about 70+ BCI datasets: motor imagery, P300/ERP, SSVEP, c-VEP and resting state. 
+        Each one is wrapped by hand, with paradigm metadata and event mapping.
+        """
         # dataset_search() returns dataset objects, so compare by class name (e.g. "BNCI2014_001")
         assert dataset in [type(ds).__name__ for ds in self.get_moabb_datasets()], "[ERROR] Dataset does not exist in MOABB database."
 
@@ -314,16 +318,64 @@ class DatasetManager():
         self.dataset_name = dataset
 
         if(subject_limit != 0):
-            self.dataset.datasets = self.dataset.datasets[:subject_limit]
+            self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
     
     def load_eegdash_dataset(self, dataset:str=None, subject_limit:int=0):
+        """
+        EEGDash indexes hundreds of BIDS-formatted datasets from OpenNeuro/NEMAR (ds00xxxx IDs). 
+        These are mostly cognitive and clinical research recordings, not BCI benchmarks.
+        """
         assert self.get_eegdash_datasets(dataset), "[ERROR] Dataset does not exist in EEGDash database."
         
         self.dataset = EEGDashDataset(cache_dir=self.DATA_DIR, dataset=dataset)
         self.dataset_name = dataset
 
         if(subject_limit != 0):
-            self.dataset.datasets = self.dataset.datasets[:subject_limit]
+            self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
+    
+    def load_tuh_dataset(self, path: str = None, abnormal: bool = True, subject_limit: int = 0):
+        """
+        Single dataset (TUH corpus)
+        """
+        assert path is not None, "[ERROR] TUH requires a local path (manual download)."
+        if abnormal:
+            self.dataset = TUHAbnormal(path=path, target_name="pathological")
+            self.dataset_name = "TUHAbnormal"
+        else:
+            self.dataset = TUH(path=path)
+            self.dataset_name = "TUH"
+
+        if(subject_limit != 0):
+            self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
+    
+    def load_nmt_dataset(self, path: str = None, subject_limit: int = 0):
+        """
+        Single dataset
+        """
+        assert path is not None, "[ERROR] NMT requires a local path (manual download)."
+        self.dataset = NMT(path=path)
+        self.dataset_name = "NMT"
+
+        if(subject_limit != 0):
+            self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
+    
+    def load_sleep_physionet_dataset(self, subject_limit: int = 0, crop_wake_mins: int = 30):
+        """
+        Single dataset (Sleep-EDF)
+        """
+        self.dataset = SleepPhysionet(crop_wake_mins=crop_wake_mins)
+        self.dataset_name = "SleepPhysionet" 
+
+        if(subject_limit != 0):
+            self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
+    
+    def load_generic_dataset(self, dataset:BaseConcatDataset, subject_limit:int=0):
+        assert dataset, "[ERROR] Dataset does not exist in EEGDash database."
+
+        self.dataset = dataset
+        
+        if(subject_limit != 0):
+            self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
     
     # -------------------------------- RECORDING INFO --------------------------------
     def inspect_recording(self, recording):
@@ -516,9 +568,10 @@ class DatasetManager():
         
         return raw
 
-    def __psd_gen(self, raw:mne.io.Raw, sub_id:str, group:str, output_dir:str, sub_dir:str):
+    def __psd_gen(self, raw:mne.io.Raw, sub_id:str, record_idx:int, group:str, output_dir:str, sub_dir:str):
         """
         Receives raw input (mne.io.raw object). Generate PSD and PSD topomap. Bad channels are kept in the PSD plot.
+        Named by recording (a subject may have many sessions/runs, each one would overwrite the previous plot).
         """
         psd_dir = self.DATASETS_DIR / output_dir / "Recordings-PSDs" / sub_dir
         psd_dir.mkdir(parents=True, exist_ok=True)
@@ -526,11 +579,11 @@ class DatasetManager():
         psd = raw.compute_psd(verbose=False)
         fig1 = psd.plot(show=False)
         fig2 = psd.plot_topomap(show=False)
-        fig1.suptitle(f"Subject {sub_id} ({group}) PSD")
-        fig2.suptitle(f"Subject {sub_id} ({group}) PSD Topomap")
-        
-        fig1.savefig(psd_dir / f"psd_{sub_id}_{sub_dir}.png", dpi=150, bbox_inches="tight") # DPI 150 economiza espaço/tempo
-        fig2.savefig(psd_dir / f"psd_topomap_{sub_id}_{sub_dir}.png", dpi=150, bbox_inches="tight")
+        fig1.suptitle(f"Recording {record_idx}, Subject {sub_id} ({group}) PSD")
+        fig2.suptitle(f"Recording {record_idx}, Subject {sub_id} ({group}) PSD Topomap")
+
+        fig1.savefig(psd_dir / f"psd_recording_{record_idx}_{sub_dir}.png", dpi=150, bbox_inches="tight") # DPI 150 economiza espaço/tempo
+        fig2.savefig(psd_dir / f"psd_topomap_recording_{record_idx}_{sub_dir}.png", dpi=150, bbox_inches="tight")
         plt.close('all')
 
     def __apply_multiplier(self, raw:mne.io.Raw, value_multiplier:float=1.0):
@@ -548,9 +601,9 @@ class DatasetManager():
             raw.notch_filter(freqs=freqs, method="fir", fir_design="firwin")
         return raw
 
-    def __record_dropped(self, output_dir:str, sub_id:str, info:dict):
+    def __record_dropped(self, output_dir:str, rec_key:str, info:dict):
         """
-        Record a dropped subject (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
+        Record a dropped recording (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
         """
         params_path = self.DATASETS_DIR / output_dir / "params.json"
 
@@ -561,7 +614,7 @@ class DatasetManager():
 
             # Initialize the key if it doesn't exist
             params.setdefault("dropped", {})
-            params["dropped"][str(sub_id)] = info
+            params["dropped"][rec_key] = info
 
             with open(params_path, "w") as f:
                 json.dump(params, f, indent=4)
@@ -582,33 +635,21 @@ class DatasetManager():
         subject_path = self.DATASETS_DIR / output_dir / "PreProcessed-EEG"
         subject_path.mkdir(parents=True, exist_ok=True)
 
-        for folder in subject_path.iterdir():
-            if folder.is_dir():
-                desc_path = folder / "description.json"
-                
-                if desc_path.exists():
-                    try:
-                        with open(desc_path, "r", encoding="utf-8") as f:
-                            data = json.load(f)
-                            
-                            if str(data.get("subject")) == str(sub_id):
-                                if(overwrite): print(f"Found subject {sub_id} in folder: {folder.name}. Overwriting with new data...")
-                                if(not overwrite): 
-                                    print(f"Found subject {sub_id} in folder: {folder.name}. Skipping..")
-                                    return True
+        # Skip by recording, not by subject (a subject may have many sessions/runs): windows.save(offset=record_idx) writes each recording to folder <record_idx>/
+        rec_key = f"recording_{record_idx}"
+        if (subject_path / str(record_idx) / "description.json").exists():
+            if(overwrite): print(f"Found recording {record_idx} (subject {sub_id}) in folder: {record_idx}. Overwriting with new data...")
+            else:
+                print(f"Found recording {record_idx} (subject {sub_id}) in folder: {record_idx}. Skipping..")
+                return True
 
-                    except json.JSONDecodeError:
-                        print(f"Error: Invalid JSON format in {folder.name}")
-                    except Exception as e:
-                        print(f"Error reading {folder.name}: {e}")
-        
         if(not overwrite):
             # Lock, so it doesn't read params.json while another worker is writing it
             params_path = self.DATASETS_DIR / output_dir / "params.json"
             with FileLock(f"{params_path}.lock"), open(params_path, "r") as f:
                 params = json.load(f)
-                if("dropped" in params.keys() and str(sub_id) in params["dropped"].keys()):
-                    print(f"Found subject {sub_id} in dropped subjects ({params_path}). Skipping...")
+                if("dropped" in params.keys() and rec_key in params["dropped"].keys()):
+                    print(f"Found recording {record_idx} (subject {sub_id}) in dropped recordings ({params_path}). Skipping...")
                     return True
 
         # Var initializing (if subject got dropped, assure the variables to be deleted exist)
@@ -641,6 +682,7 @@ class DatasetManager():
                 # 5. PSD (Before)
                 Preprocessor(self.__psd_gen,
                              sub_id=sub_id,
+                             record_idx=record_idx,
                              group=group,
                              output_dir=output_dir, sub_dir="before", apply_on_array=False),
                 # 6. Detect bad channels
@@ -655,7 +697,8 @@ class DatasetManager():
                 print(f"-> Dropping subject {sub_id} (Too many bad channels: {ch_bads}/{ch_total})")
 
                 # Record the reason for dropping the subject
-                self.__record_dropped(output_dir, sub_id, {
+                self.__record_dropped(output_dir, rec_key, {
+                    "subject": sub_id,
                     "reason": "Too many bad channels",
                     "bad_channels": record.raw.info["bads"],
                     "n_bad_channels": ch_bads,
@@ -691,6 +734,7 @@ class DatasetManager():
                     # 14. PSD (After)
                     Preprocessor(self.__psd_gen,
                                  sub_id=sub_id,
+                                 record_idx=record_idx,
                                  group=group,
                                  output_dir=output_dir,
                                  sub_dir="after", apply_on_array=False),
@@ -716,7 +760,8 @@ class DatasetManager():
         except Exception as e:
             print(f"\n[ERROR] Failed processing subject {sub_id}: {e}\n")
             # Record the error, so the subject is skipped on the next run (use overwrite=True to retry)
-            self.__record_dropped(output_dir, sub_id, {
+            self.__record_dropped(output_dir, rec_key, {
+                "subject": sub_id,
                 "reason": "Processing error",
                 "error": str(e),
             })
