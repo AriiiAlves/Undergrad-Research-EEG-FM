@@ -886,7 +886,9 @@ class DatasetManager():
         dataset = self.dataset
         self.dataset = None
         try:
-            results = joblib.Parallel(n_jobs=n_jobs, backend='loky')(
+            # mmap_mode='c': joblib sends large arrays (e.g. preloaded MOABB raws) as READ-ONLY memmaps by default, so in-place
+            # MNE operations fail ("assignment destination is read-only"). Copy-on-write keeps them shared and writable
+            results = joblib.Parallel(n_jobs=n_jobs, backend='loky', mmap_mode='c')(
                 joblib.delayed(self._process_single_subject)(
                     record=record,
                     output_dir=output_dir,
