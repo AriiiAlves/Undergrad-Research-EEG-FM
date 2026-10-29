@@ -127,12 +127,12 @@ class BenchModel():
         errors = []
         warnings = []
         sfreqs, sizes, n_chans_used = set(), set(), []
-        not_volts_subjects = []
+        not_volts_recordings = []
 
         for dataset_idx, window_ds in enumerate(self.loaded_windows.datasets):
-            subject = f"Subject {dataset_idx}"
+            recording = f"Recording {dataset_idx} (subject {self.loaded_windows.description.iloc[dataset_idx].get('subject', 'N/A')})"
             if len(window_ds) == 0:
-                errors.append(f"{subject}: has no windows")
+                errors.append(f"{recording}: has no windows")
                 continue
 
             info = self.window_info(window_ds)
@@ -147,24 +147,24 @@ class BenchModel():
             picks = self.select_channels(ch_names)
             n_chans_used.append(len(picks))
             if len(picks) < self.MIN_CHANNELS:
-                errors.append(f"{subject}: only {len(picks)} usable channels (minimum: {self.MIN_CHANNELS})")
+                errors.append(f"{recording}: only {len(picks)} usable channels (minimum: {self.MIN_CHANNELS})")
 
             # Window length (after resampling and regrouping)
             if self.WINDOW_SIZE is not None:
                 total = self.__resampled_n_times(n_times * len(window_ds), sfreq)
                 if total < self.WINDOW_SIZE:
-                    errors.append(f"{subject}: recording has {total} samples at {self.SFREQ or sfreq} Hz, shorter than one model window ({self.WINDOW_SIZE})")
+                    errors.append(f"{recording}: has {total} samples at {self.SFREQ or sfreq} Hz, shorter than one model window ({self.WINDOW_SIZE})")
 
             # Electrode positions
             if self.REQUIRES_POSITIONS and len(picks) > 0:
                 pos = np.asarray(window_ds.ch_pos)[picks]
                 invalid = [ch_names[picks[i]] for i, p in enumerate(pos) if np.isnan(p).any() or np.all(p == 0)]
                 if invalid:
-                    errors.append(f"{subject}: channels without valid positions (montage not set?): {invalid}")
+                    errors.append(f"{recording}: channels without valid positions (montage not set?): {invalid}")
 
             # Units (EEG in Volts is ~1e-5; values much larger probably are not in V)
             if np.median(np.abs(x)) > 1e-3:
-                not_volts_subjects.append(dataset_idx)
+                not_volts_recordings.append(dataset_idx)
 
         # Adaptations made automatically by __prepare
         for sfreq in sorted(sfreqs):
@@ -175,18 +175,18 @@ class BenchModel():
                 for sfreq in sorted(sfreqs):
                     resampled = self.__resampled_n_times(n_times, sfreq)
                     if resampled != self.WINDOW_SIZE:
-                        warnings.append(f"Windows of {resampled} samples will be regrouped into windows of {self.WINDOW_SIZE} samples (the incomplete last window of each subject is dropped)")
+                        warnings.append(f"Windows of {resampled} samples will be regrouped into windows of {self.WINDOW_SIZE} samples (the incomplete last window of each recording is dropped)")
         if len(sfreqs) > 1:
-            warnings.append(f"Subjects have different sampling rates: {sorted(sfreqs)}")
+            warnings.append(f"Recordings have different sampling rates: {sorted(sfreqs)}")
         if len(sizes) > 1:
-            warnings.append(f"Subjects have different window sizes: {sorted(sizes)}")
-        if not_volts_subjects:
-            warnings.append(f"Subjects {not_volts_subjects} do not look like Volts (median |x| > 1e-3). If the recordings are in µV, preprocess them with value_multiplier=1e-6")
+            warnings.append(f"Recordings have different window sizes: {sorted(sizes)}")
+        if not_volts_recordings:
+            warnings.append(f"Recordings {not_volts_recordings} do not look like Volts (median |x| > 1e-3). If the recordings are in µV, preprocess them with value_multiplier=1e-6")
 
         # Report
         print("=" * 50)
         print(f"[{self.MODEL_NAME}] Windows verification")
-        print(f"Subjects: {len(self.loaded_windows.datasets)} | Sampling rates: {sorted(sfreqs)} Hz | Window sizes: {sorted(sizes)} samples")
+        print(f"Recordings: {len(self.loaded_windows.datasets)} | Sampling rates: {sorted(sfreqs)} Hz | Window sizes: {sorted(sizes)} samples")
         if n_chans_used:
             print(f"Usable channels: {min(n_chans_used)}-{max(n_chans_used)}")
         print(f"Model specs: SFREQ={self.SFREQ}, WINDOW_SIZE={self.WINDOW_SIZE}, MIN_CHANNELS={self.MIN_CHANNELS}, REQUIRES_POSITIONS={self.REQUIRES_POSITIONS}")
