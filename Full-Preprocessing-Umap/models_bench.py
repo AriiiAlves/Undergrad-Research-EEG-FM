@@ -2,9 +2,11 @@ import os
 import json
 import torch
 import sys
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from fractions import Fraction
 from braindecode.datautil import load_concat_dataset
-import umap
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path # Paths
@@ -16,6 +18,13 @@ base_dir = Path(__file__).resolve().parent  # Parent folder
 sys.path.append(str(base_dir / "BrainOmni")) # Where the brainomni files live
 
 from BrainOmni.brainomni.model import BrainOmni
+
+def fit_umap(features, n_neighbors):
+    """
+    2D UMAP of features [N_points, latent_dim]. Runs in the child process of BenchModel.umap().
+    """
+    import umap # Only the child process loads numba
+    return umap.UMAP(n_neighbors=n_neighbors, min_dist=0.1, metric='cosine', random_state=42, init="random").fit_transform(features)
 
 class BenchModel():
     """
@@ -198,27 +207,53 @@ class BenchModel():
         """
         windows = [window_ds[idx][0][picks] for idx in range(len(window_ds))]
         ratio = self.__resample_ratio(sfreq)
+        self.__log(f"Loaded {len(windows)} windows ({len(picks)} channels picked, {sfreq} Hz)", windows[0], "per window")
 
         if self.WINDOW_SIZE is None:
             # Keep the windows as they are (only resampled)
             if ratio is not None:
                 windows = [resample_poly(w, ratio.numerator, ratio.denominator, axis=-1) for w in windows]
+                self.__log(f"Resampled windows {sfreq} -> {self.SFREQ} Hz (up={ratio.numerator}, down={ratio.denominator})", windows[0], "per window")
+            else:
+                self.__log("Keeping windows as they are (no resampling, no regrouping)", windows[0], "per window")
             x = np.stack(windows)
+            self.__log("Stacked windows", x)
         else:
             # Windows are contiguous: rebuild the continuous signal, resample it once and split it in WINDOW_SIZE windows
             # (e.g. 50 -> 25: each window is split in two; 50 -> 75: windows are joined, only the incomplete last one is dropped)
             signal = np.concatenate(windows, axis=-1)
+            self.__log("Joined windows into the continuous signal", signal, "signal")
             if ratio is not None:
                 signal = resample_poly(signal, ratio.numerator, ratio.denominator, axis=-1)
+                self.__log(f"Resampled signal {sfreq} -> {self.SFREQ} Hz (up={ratio.numerator}, down={ratio.denominator})", signal, "signal")
             n_windows = signal.shape[-1] // self.WINDOW_SIZE
+            dropped = signal.shape[-1] - n_windows * self.WINDOW_SIZE
             signal = signal[:, :n_windows * self.WINDOW_SIZE]
             x = signal.reshape(signal.shape[0], n_windows, self.WINDOW_SIZE).transpose(1, 0, 2)
+            self.__log(f"Split signal into {n_windows} windows of {self.WINDOW_SIZE} samples ({dropped} trailing samples dropped)", x)
 
         # Volts -> model units
         x = x * self.V_TO_MODEL
+        self.__log(f"Converted windows to model units (x {self.V_TO_MODEL:g})", x)
         # Small eps: EEG in Volts has std ~1e-5, so a 1e-6 eps would distort the z-score
-        if self.z_score: x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-12)
+        if self.z_score:
+            x = (x - x.mean(axis=-1, keepdims=True)) / (x.std(axis=-1, keepdims=True) + 1e-12)
+            self.__log("Z-scored every channel of every window", x)
+        else:
+            self.__log("Z-score off: keeping the values in model units", x)
         return x.astype(np.float32)
+
+    def __log(self, step, x, label="windows"):
+        """
+        Print a preprocessing step with the shape and value range of the data after it.
+        """
+        x = np.asarray(x)
+        print(f"[{self.MODEL_NAME}] {step} | {label}: shape={tuple(x.shape)}, mean={x.mean():.3g}, std={x.std():.3g}")
+
+    def __print_section(self, title):
+        print("\n" + "=" * 90)
+        print(title)
+        print("=" * 90)
 
     def __suffix(self):
         """
@@ -239,11 +274,14 @@ class BenchModel():
         subject_ids_path = file_path.with_name(file_path.stem + "_subject_ids.pt")
 
         if file_path.exists() and subject_ids_path.exists():
-            return torch.load(file_path), torch.load(subject_ids_path)
+            final_features, subject_ids = torch.load(file_path), torch.load(subject_ids_path)
+            print(f"[{self.MODEL_NAME}] Loaded cached window embeddings from {file_path} | shape={tuple(final_features.shape)}, subjects={len(subject_ids.unique())}")
+            return final_features, subject_ids
 
         window_embeddings = []
         window_subject_ids = []
         datasets = self.loaded_windows.datasets[:limit or None]
+        print(f"[{self.MODEL_NAME}] Encoding {len(datasets)} subjects on {self.device} (batch size {self.batch_size}, z-score {'on' if self.z_score else 'off'})")
 
         with torch.no_grad():
             for dataset_idx, window_ds in enumerate(datasets):
@@ -254,7 +292,9 @@ class BenchModel():
                 self.current_ch_names = [info.ch_names[i] for i in picks]
 
                 # Windows of the subject adapted to the model (may differ in number from the loaded ones, if regrouped)
+                self.__print_section(f"[{self.MODEL_NAME}] Subject {dataset_idx+1}/{len(datasets)}: preparing windows")
                 model_windows = self.__prepare(window_ds, picks, info["sfreq"])
+                print(f"[{self.MODEL_NAME}] Windows ready for the model | shape={model_windows.shape}, dtype={model_windows.dtype}")
 
                 # Processing windows in batches to optimize GPU memory usage
                 with tqdm(total=len(model_windows), desc=f"[{self.MODEL_NAME}] Subject {dataset_idx+1}/{len(datasets)}", unit="window") as pbar:
@@ -267,6 +307,7 @@ class BenchModel():
                         window_embeddings.append(embeddings.reshape(embeddings.size(0), -1).cpu())
                         window_subject_ids.extend([dataset_idx] * (stop - start))
                         pbar.update(stop - start)
+                print(f"[{self.MODEL_NAME}] Encoded windows | embedding shape per window={tuple(window_embeddings[-1].shape[1:])}")
 
                 # Free GPU cache
                 if torch.cuda.is_available():
@@ -276,10 +317,11 @@ class BenchModel():
         final_features = torch.cat(window_embeddings, dim=0)
         subject_ids = torch.tensor(window_subject_ids)
 
-        print("Latent space format (by window):", final_features.shape)
+        print(f"[{self.MODEL_NAME}] Latent space (by window) | shape={tuple(final_features.shape)}")
         torch.save(final_features, file_path)
         # Saves subject IDs separately to identify each window in the UMAP
         torch.save(subject_ids, subject_ids_path)
+        print(f"[{self.MODEL_NAME}] Saved window embeddings to {file_path} (subject ids to {subject_ids_path})")
         return final_features, subject_ids
 
     def use_latent_space(self, mode="avg", limit=0, z_score=None):
@@ -297,9 +339,12 @@ class BenchModel():
         self.mode = mode
         self.z_score = self.Z_SCORE if z_score is None else z_score
 
+        print("=" * 50)
+        print(f"[{self.MODEL_NAME}] Latent space: mode={mode}, z-score={'on' if self.z_score else 'off'}, limit={limit or 'all subjects'}")
         self.final_features, self.subject_ids = self.encode_windows(limit)
 
         if mode == "windows":
+            print(f"[{self.MODEL_NAME}] Keeping one point per window (no aggregation) | shape={tuple(self.final_features.shape)}")
             return
 
         # Aggregates the window embeddings of each subject (cheap, recomputed every time)
@@ -309,29 +354,35 @@ class BenchModel():
         ])
         self.subject_ids = self.subject_ids.unique()
 
-        print(f"UMAP final format (by subject, {mode}):", self.final_features.shape)
+        print(f"[{self.MODEL_NAME}] Aggregated the windows of each subject ({mode}) | shape={tuple(self.final_features.shape)}")
         torch.save(self.final_features, self.__latent_space_file(mode, limit))
+        print(f"[{self.MODEL_NAME}] Saved aggregated latent space to {self.__latent_space_file(mode, limit)}")
 
     # -------------------------------- UMAP --------------------------------
     def umap(self):
         assert self.final_features is not None, "Call use_latent_space() before umap()"
         final_features = self.final_features.cpu().numpy()
-        print("=" * 50)
-        print(final_features.shape)
-        print("=" * 50)
+        print(f"[{self.MODEL_NAME}] UMAP input ({self.mode}) | shape={final_features.shape} ([N_points, latent_dim])")
 
         # Metadata of the subject of each point (one row by subject or by window), ignoring all "N/A" columns
         metadata = self.loaded_windows.description.fillna("N/A").iloc[self.subject_ids.numpy()]
         labels = {column: values for column, values in metadata.to_dict("list").items() if not all(value == "N/A" for value in values)}
+        print(f"[{self.MODEL_NAME}] Labels to plot: {list(labels)}")
 
         # For umap: final_features.shape = [N_points, latent_dim] (same embedding for every label)
-        embedding = umap.UMAP(
-            n_neighbors=min(5, len(final_features) - 1), # Adjust n_neighbors if few subjects
-            min_dist=0.1,
-            metric='cosine',
-            random_state=42,
-            init="random"
-        ).fit_transform(final_features)
+        n_neighbors = min(5, len(final_features) - 1) # Adjust n_neighbors if few subjects
+        print(f"[{self.MODEL_NAME}] Fitting UMAP (n_neighbors={n_neighbors}, min_dist=0.1, metric=cosine)...")
+        # numba (UMAP) randomly segfaults while JIT-compiling on this machine: fit in a child process, so a crash is retried
+        # instead of killing the run (random_state=42 makes every attempt give the same embedding)
+        for attempt in range(1, 6):
+            try:
+                with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn")) as pool:
+                    embedding = pool.submit(fit_umap, final_features, n_neighbors).result()
+                break
+            except BrokenProcessPool:
+                if attempt == 5: raise
+                print(f"[{self.MODEL_NAME}] UMAP process crashed, retrying ({attempt}/5)...")
+        print(f"[{self.MODEL_NAME}] UMAP embedding | shape={embedding.shape}")
 
         windows = self.mode == "windows"
         size = 20 if windows else 100 # Point size
@@ -361,8 +412,10 @@ class BenchModel():
             ax.grid(True, linestyle="--", alpha=0.5)
             fig.tight_layout()
 
-            fig.savefig(f"{self.DS_PLOTS_DIR}/{self.MODEL_NAME}_{self.DS_NAME}_{self.mode}_umap{self.__suffix()}_label_{label_type}.png", dpi=300, bbox_inches='tight')
+            plot_path = f"{self.DS_PLOTS_DIR}/{self.MODEL_NAME}_{self.DS_NAME}_{self.mode}_umap{self.__suffix()}_label_{label_type}.png"
+            fig.savefig(plot_path, dpi=300, bbox_inches='tight')
             plt.close(fig)
+            print(f"[{self.MODEL_NAME}] Saved plot ({label_type}): {plot_path}")
 
 class BenchBrainomni(BenchModel):
     '''
@@ -431,7 +484,7 @@ class BenchLabram(BenchModel):
     """
     MODEL_NAME = "labram"
     SFREQ = 200
-    #WINDOW_SIZE = 200 # The pretrained model allows up to 3000 samples (15 patches).
+    WINDOW_SIZE = 3000 # The pretrained model only accepts exactly 3000 samples (15 patches of 200): its position/temporal embeddings are fixed to 15 patches
     V_TO_MODEL = 1e6 # LaBraM was pre-trained in µV
     Z_SCORE = False
 
@@ -472,7 +525,8 @@ class BenchCBraMod(BenchModel):
 
     def load_model(self):
         from braindecode.models import CBraMod
-        return CBraMod.from_pretrained("braindecode/cbramod-pretrained")
+        # The pretrained config has no n_outputs: skip the classification head (only the encoder features are used)
+        return CBraMod.from_pretrained("braindecode/cbramod-pretrained", return_encoder_output=True)
 
     def embed(self, x, window_ds):
         # features: [batch, n_chans, n_patches, emb_dim]
