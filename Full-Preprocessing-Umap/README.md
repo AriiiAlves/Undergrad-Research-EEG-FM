@@ -2,8 +2,8 @@
 
 Two modules, used one after the other:
 
-1. **[`preprocessing.py`](preprocessing.py)**: `DatasetManager` loads an EEG dataset from **EEGDash** or **MOABB**, cleans every recording (one subject per worker, optionally in parallel), cuts it into fixed-length windows, and saves the windows to disk.
-2. **[`models_bench.py`](models_bench.py)**: `BenchModel` and its subclasses (`BenchBrainomni`, `BenchLabram`, `BenchCBraMod`) adapt those windows to each pre-trained EEG foundation model, encode them into latent vectors, and plot UMAPs of the latent space.
+1. **[`preprocessing.py`](preprocessing.py)**: `DatasetManager` loads an EEG dataset (**EEGDash**, **MOABB**, TUH, NMT, Sleep-EDF or any Braindecode `BaseConcatDataset`), cleans every recording (one recording per worker, optionally in parallel), cuts it into fixed-length windows, and saves the windows to disk.
+2. **[`models_bench.py`](models_bench.py)**: `BenchModel` and its subclasses (`BenchBrainomni`, `BenchLabram`, `BenchCBraMod`) adapt those windows to each pre-trained EEG foundation model, encode them into latent vectors, aggregate them by recording or by subject, and plot UMAPs of the latent space (including UMAPs of the windows labelled by event).
 
 [`main.py`](main.py) runs both for the datasets used in this project. [MONTAGES.md](MONTAGES.md) lists every MNE montage and its channel names.
 
@@ -19,7 +19,7 @@ Two modules, used one after the other:
 4. [Output layout](#4-output-layout)
 5. [Public API](#5-public-api)
 6. [Internal (private) methods](#6-internal-private-methods)
-7. [Resuming, skipping and dropped subjects](#7-resuming-skipping-and-dropped-subjects)
+7. [Resuming, skipping and dropped recordings](#7-resuming-skipping-and-dropped-recordings)
 8. [Writing a `channels_treatment` function](#8-writing-a-channels_treatment-function)
 9. [Known limitations and caveats](#9-known-limitations-and-caveats)
 
@@ -59,13 +59,13 @@ dm.preprocess_and_window(
     l_freq=0.1, h_freq=75,       # band-pass (Hz)
     notch_freqs=[50, 60],        # power line frequencies to remove ([] = no notch)
     down_freq=256,               # resample to 256 Hz
-    bad_ch_tolerance=0.2,        # drop subject if >20% of EEG channels are bad
+    bad_ch_tolerance=0.2,        # drop a recording if >20% of its EEG channels are bad
     ransac=True,                 # RANSAC bad-channel detection (slow, better)
     ica=True,                    # ICA for EOG/ECG removal (else SSP)
     window_size=512,             # samples per window (512 / 256 Hz = 2 s)
-    n_jobs=4,                    # subjects processed at the same time
+    n_jobs=4,                    # recordings processed at the same time
     ref_channels=[],             # [] = Common Average Reference
-    overwrite=False,             # skip subjects already processed / dropped
+    overwrite=False,             # skip recordings already processed / dropped
     montage="colin27_1020",      # "" = auto-detect from channel names
     treat_artifacts=True,
     value_multiplier=1.0,        # 1e-6 if the recordings are stored in µV
@@ -83,13 +83,18 @@ preprocess_and_window()                                   (main process)
  │
  ├─ channels_treatment is None? ──► use __default_ch_treatment (returns raw unchanged)
  ├─ no montage set? ──► __investigate_montage on the first recording (may ask with input())
- ├─ write PreProcessed-Datasets/<output_dir>/params.json  (keeps previous "dropped" entries)
+ ├─ params.json already exists?
+ │      settings equal (n_jobs ignored) ──► keep its "dropped" entries
+ │      settings differ ──► prints a saved-vs-new table and asks (input()):
+ │           y ─► use the SAVED settings (keeps "dropped")
+ │           n ─► use the NEW settings, overwrite=True, forget "dropped" (everything is reprocessed)
+ ├─ write PreProcessed-Datasets/<output_dir>/params.json
  │
- └─ joblib.Parallel(n_jobs) over every recording:         (worker processes)
-      _process_single_subject()
+ └─ joblib.Parallel(n_jobs, mmap_mode='c') over every recording (record_idx = position in the dataset):
+      _process_single_subject()                           (worker processes)
        │
-       ├─ already saved? (description.json with same subject) ──► skip unless overwrite
-       ├─ listed in params.json["dropped"]?                  ──► skip unless overwrite
+       ├─ already saved? (PreProcessed-EEG/<record_idx>/description.json) ──► skip unless overwrite
+       ├─ "recording_<record_idx>" in params.json["dropped"]?             ──► skip unless overwrite
        │
        ├─ STAGE 1 ──────────────────────────────────────────────────────────────
        │   1. channels_treatment(raw)        user function (rename / drop channels)
@@ -113,17 +118,21 @@ preprocess_and_window()                                   (main process)
        │  14. __psd_gen (after)              PSD + topomap PNGs of the clean signal
        │
        ├─ create_fixed_length_windows        non-overlapping windows, last partial dropped
-       ├─ windows.save(...)                  written straight to disk
+       ├─ windows.save(offset=record_idx)    written straight to disk, in folder <record_idx>/
        │
        ├─ on any exception ─► __record_dropped("Processing error") ─► return False
        └─ finally: free memory (del, record.raw = None, gc.collect())
  │
- └─ print "Finished Processing. Succesfully processed subjects: X/N"
+ └─ print "Finished Processing. Succesfully processed subjects: X/N"   (X and N count recordings)
 ```
 
 ### Why two stages?
 
-Bad-channel detection (step 6) is cheap compared with ICA, filtering and resampling. Checking `bad_ch_tolerance` between the stages means unusable subjects are dropped before the expensive work runs.
+Bad-channel detection (step 6) is cheap compared with ICA, filtering and resampling. Checking `bad_ch_tolerance` between the stages means unusable recordings are dropped before the expensive work runs.
+
+### Why everything is per recording, not per subject?
+
+A subject can have several recordings (sessions, runs, tasks). BNCI2014_001, for example, has 12 per subject (2 sessions × 6 runs). Skipping, dropping and the PSD file names all use the recording index (`record_idx`), so one bad run drops only that run, and a subject's later runs are not mistaken for "already saved". The subject id is still printed and stored (in `description.json` and in each `dropped` entry), and `models_bench.py` can aggregate by subject afterwards (`group_by="subject"`).
 
 ### Why the unit conversion comes early (step 4)?
 
@@ -146,8 +155,9 @@ The notch removes a band well under 1 Hz wide, so little EEG is lost. Applying t
 - **`n_jobs=1`** runs everything sequentially in the main process (no workers).
 - **Memory:** each worker loads one full recording and runs ICA/RANSAC on it, so RAM grows roughly linearly with `n_jobs`. Start low (e.g. 4) and watch memory before going higher.
 - **Montage:** workers can't ask for `input()`, and a montage found in one worker isn't seen by the others. So when no montage is given, it is detected **once in the main process**, using the first recording, before the workers start. If several montages match, you're asked to choose at that point. For unattended runs (`nohup`, cluster jobs), pass `montage=` explicitly.
-- **`params.json`:** workers read and write it with a `FileLock` (`params.json.lock`), so two subjects dropped at the same time don't overwrite each other. If two workers need it at once, the second **waits** until the first finishes its read/write. Only that short block is serialized; the rest of the processing stays parallel. `params.json.lock` is created before the workers start and deleted when processing finishes (even after an error).
-- **Dataset not copied per task:** `self.dataset` is set to `None` while the workers run (and restored afterwards). Otherwise the whole dataset would be pickled and sent with every subject.
+- **Read-only arrays (`mmap_mode='c'`):** by default joblib sends large NumPy arrays to the workers as **read-only** memory-mapped files. Datasets that arrive with their data already in memory (e.g. MOABB) would then fail at the first in-place MNE operation with `assignment destination is read-only`. Copy-on-write (`mmap_mode='c'`) keeps the arrays shared between workers, and a worker copies an array only when it writes to it.
+- **`params.json`:** workers read and write it with a `FileLock` (`params.json.lock`), so two recordings dropped at the same time don't overwrite each other. If two workers need it at once, the second **waits** until the first finishes its read/write. Only that short block is serialized; the rest of the processing stays parallel. `params.json.lock` is created before the workers start and deleted when processing finishes (even after an error).
+- **Dataset not copied per task:** `self.dataset` is set to `None` while the workers run (and restored afterwards). Otherwise the whole dataset would be pickled and sent with every recording.
 - **Pickling rule:** anything sent to the workers must be picklable. That's why `_process_single_subject` uses one underscore, and `__default_ch_treatment` is a `@staticmethod`. A regular `__name` method can't be pickled, because of Python name mangling. Your `channels_treatment` must be a module-level function (not a lambda defined inside another function).
 
 ---
@@ -165,25 +175,27 @@ After `preprocess_and_window(output_dir="DS006576", ...)`:
 
 ```
 ./PreProcessed-Datasets/DS006576/
-├── params.json                              ← parameters + dropped subjects
+├── params.json                              ← parameters + dropped recordings
 ├── params.json.lock                         ← only while running: lock file for the workers (deleted at the end)
 ├── ds006576_inspection.txt                  ← only if inspect_dataset() was called
 ├── PreProcessed-EEG/
-│   ├── 0/                                   ← one folder per recording (folder name = record index)
-│   │   ├── 0-raw.fif                        ← the preprocessed signal
+│   ├── 0/                                   ← one folder per recording (folder name = record_idx)
+│   │   ├── 0-raw.fif                        ← the preprocessed signal (keeps the annotations / events)
 │   │   ├── metadata_df.pkl                  ← window start/stop indices
-│   │   ├── description.json                 ← includes "subject"; used to detect already-processed subjects
+│   │   ├── description.json                 ← subject, session, run... (its presence marks the recording as processed)
 │   │   └── *_kwargs.json                    ← Braindecode window/preprocessing kwargs
 │   ├── 1/
-│   └── ...
+│   └── ...                                  ← gaps in the numbering = dropped recordings
 └── Recordings-PSDs/
     ├── before/
-    │   ├── psd_<sub>_before.png
-    │   └── psd_topomap_<sub>_before.png
+    │   ├── psd_recording_<record_idx>_before.png
+    │   └── psd_topomap_recording_<record_idx>_before.png
     └── after/
-        ├── psd_<sub>_after.png
-        └── psd_topomap_<sub>_after.png
+        ├── psd_recording_<record_idx>_after.png
+        └── psd_topomap_recording_<record_idx>_after.png
 ```
+
+`record_idx` is the recording's position in the loaded dataset (`self.dataset.datasets`), so folder `<record_idx>/`, the PSD files and the `dropped` key `recording_<record_idx>` all refer to the same recording. The PSD titles also show the subject id.
 
 The saved windows can be loaded back with Braindecode (this is what `models_bench.py` does):
 
@@ -210,13 +222,15 @@ windows = load_concat_dataset("PreProcessed-Datasets/DS006576/PreProcessed-EEG",
     "value_multiplier": 1.0,
     "notch_freqs": [50, 60],
     "dropped": {
-        "105": {
+        "recording_35": {
+            "subject": 3,
             "reason": "Too many bad channels",
-            "bad_channels": ["PO4", "TP8", "..."],
-            "n_bad_channels": 13,
-            "n_total_channels": 62
+            "bad_channels": ["C5", "C4", "FC3", "C6", "FC4"],
+            "n_bad_channels": 5,
+            "n_total_channels": 22
         },
-        "142": {
+        "recording_142": {
+            "subject": 142,
             "reason": "Processing error",
             "error": "..."
         }
@@ -224,7 +238,9 @@ windows = load_concat_dataset("PreProcessed-Datasets/DS006576/PreProcessed-EEG",
 }
 ```
 
-`"montage"` is the montage that was actually used, including one that was auto-detected.
+`"montage"` is the montage that was actually used, including one that was auto-detected. `n_jobs` is saved but ignored when comparing settings (it changes the speed, not the result).
+
+> Older `params.json` files keyed `dropped` by subject id (e.g. `"105"`). Those keys no longer match any recording, so those recordings are retried once and, if still bad, dropped again under the new `recording_<idx>` key.
 
 ---
 
@@ -274,7 +290,21 @@ Checks that `dataset` exists in EEGDash, then builds an `EEGDashDataset` cached 
 - `subject_limit`: if `> 0`, keeps only the first *N* **recordings** (not subjects: a subject with several runs counts once per run).
 
 #### `load_moabb_dataset(dataset, subject_limit=0)`
-Same idea for MOABB. `dataset` is the MOABB class name (e.g. `"BNCI2014_001"`) and is checked against `get_moabb_datasets()`. It sets the MOABB download dir to `DATA_DIR` and builds a Braindecode `MOABBDataset`.
+Same idea for MOABB. `dataset` is the MOABB class name (e.g. `"BNCI2014_001"`) and is checked against `get_moabb_datasets()`. It sets the MOABB download dir to `DATA_DIR` and builds a Braindecode `MOABBDataset`. MOABB recordings come with their data already loaded in memory (see the `mmap_mode` note in [§3](#3-parallel-processing)).
+
+#### `load_tuh_dataset(path, abnormal=True, subject_limit=0)`
+Loads the TUH EEG corpus from a local folder (it needs a manual download). `abnormal=True` builds `TUHAbnormal` (with `target_name="pathological"`, `dataset_name="TUHAbnormal"`); `False` builds the full `TUH` (`dataset_name="TUH"`).
+
+#### `load_nmt_dataset(path, subject_limit=0)`
+Loads the NMT scalp EEG dataset from a local folder (manual download). `dataset_name="NMT"`.
+
+#### `load_sleep_physionet_dataset(subject_limit=0, crop_wake_mins=30)`
+Loads Sleep-EDF through Braindecode's `SleepPhysionet` (downloaded automatically). `crop_wake_mins` keeps only that many minutes of wake before and after sleep. `dataset_name="SleepPhysionet"`.
+
+#### `load_generic_dataset(dataset, subject_limit=0)`
+Uses any Braindecode `BaseConcatDataset` you already built. It doesn't set `dataset_name`.
+
+All loaders apply `subject_limit` the same way: the first *N* recordings are kept.
 
 ---
 
@@ -302,7 +332,7 @@ dm.inspect_recording(dm.dataset.datasets[0].raw)
 ### Preprocessing
 
 #### `preprocess_and_window(output_dir, channels_treatment=None, ...)`
-The main entry point. It chooses the montage, writes `params.json`, then runs `_process_single_subject` on every recording in `self.dataset.datasets`, in parallel when `n_jobs > 1`.
+The main entry point. It chooses the montage, compares the settings with an existing `params.json` (asking which ones to use if they differ, see [§7](#7-resuming-skipping-and-dropped-recordings)), writes `params.json`, then runs `_process_single_subject` on every recording in `self.dataset.datasets`, in parallel when `n_jobs > 1`.
 
 | Param | Default | Description |
 |---|---|---|
@@ -311,13 +341,13 @@ The main entry point. It chooses the montage, writes `params.json`, then runs `_
 | `l_freq` | `1` | High-pass cutoff (Hz) |
 | `h_freq` | `40` | Low-pass cutoff (Hz) |
 | `down_freq` | `200` | Target sampling rate after resampling (Hz) |
-| `bad_ch_tolerance` | `0.15` | Max fraction (0–1) of bad EEG channels. A subject is dropped if `n_bad > int(n_eeg × tolerance)` |
+| `bad_ch_tolerance` | `0.15` | Max fraction (0–1) of bad EEG channels. A recording is dropped if `n_bad > int(n_eeg × tolerance)` |
 | `ransac` | `True` | Include RANSAC in pyprep's bad-channel detection (more accurate, much slower) |
 | `ica` | `True` | `True` = ICA (15 components, FastICA) for EOG/ECG removal; `False` = SSP (faster) |
 | `window_size` | `512` | Window length in **samples** at `down_freq`. Stride = `window_size` (no overlap) |
-| `n_jobs` | `4` | Number of subjects processed at the same time (worker processes). `1` = sequential. See [§3](#3-parallel-processing) |
+| `n_jobs` | `4` | Number of recordings processed at the same time (worker processes). `1` = sequential. See [§3](#3-parallel-processing) |
 | `ref_channels` | `[]` | `[]` = Common Average Reference; otherwise these channels are the reference and are **dropped** afterwards |
-| `overwrite` | `False` | `False`: skip subjects that are already saved or dropped. `True`: process everything again |
+| `overwrite` | `False` | `False`: skip recordings that are already saved or dropped. `True`: process everything again. Forced to `True` if you choose the new settings when they differ from `params.json` |
 | `montage` | `""` | MNE built-in montage name (e.g. `"colin27_1020"`). `""` / `None` = auto-detect from the first recording. See [MONTAGES.md](MONTAGES.md) |
 | `treat_artifacts` | `True` | `False` skips step 7 entirely |
 | `value_multiplier` | `1.0` | Multiplies all data channels (step 4) to convert them to **Volts**. `1e-6` for recordings stored in µV. `1.0` = no change |
@@ -368,12 +398,12 @@ Checks that each EEG channel's position (`info['chs'][i]['loc'][:3]`) is not NaN
 #### `__apply_multiplier(raw, value_multiplier=1.0)`: step 4
 If `value_multiplier != 1.0`, multiplies the data with `raw.apply_function(lambda x: x * value_multiplier, channel_wise=False)`. MNE has no dedicated scaling method; `apply_function` with default `picks` scales every data channel (bad channels included) and leaves stim/misc channels untouched.
 
-#### `__psd_gen(raw, sub_id, group, output_dir, sub_dir)`: steps 5 and 14
+#### `__psd_gen(raw, sub_id, record_idx, group, output_dir, sub_dir)`: steps 5 and 14
 Computes the power spectral density (`raw.compute_psd()`) and saves two figures at 150 dpi in `PreProcessed-Datasets/<output_dir>/Recordings-PSDs/<sub_dir>/`:
-- `psd_<sub_id>_<sub_dir>.png`: PSD per channel;
-- `psd_topomap_<sub_id>_<sub_dir>.png`: topographic map per frequency band.
+- `psd_recording_<record_idx>_<sub_dir>.png`: PSD per channel;
+- `psd_topomap_recording_<record_idx>_<sub_dir>.png`: topographic map per frequency band.
 
-`sub_dir` is `"before"` or `"after"`. Bad channels are kept in the plot so problems stay visible. Use these figures to judge recording quality (and to check that the notch removed the line noise).
+Files are named by recording, so several recordings of one subject don't overwrite each other; the title shows both the recording index and the subject id (plus `group`, if the dataset has one). `sub_dir` is `"before"` or `"after"`. Bad channels are kept in the plot so problems stay visible. Use these figures to judge recording quality (and to check that the notch removed the line noise).
 
 #### `__auto_detect_bads(raw, ransac=True)`: step 6
 Runs `pyprep.NoisyChannels(raw, random_state=42).find_all_bads(ransac=ransac)` and stores the result in `raw.info['bads']`. pyprep always runs its NaN/flat, deviation, high-frequency noise, correlation and SNR checks. `ransac=True` adds RANSAC, which predicts each channel from a random subset of the others and flags channels that are predicted poorly.
@@ -402,14 +432,14 @@ If `raw.info['bads']` is not empty, rebuilds those channels from their neighbour
 #### `__notch_filter(raw, notch_freqs=[])`: step 11
 Keeps only the frequencies below Nyquist (`sfreq / 2`), then runs `raw.notch_filter(freqs, method="fir", fir_design="firwin")` (the same FIR design as the band-pass, zero-phase). Does nothing if the list ends up empty. It runs at the original sampling rate, before the band-pass and the resampling.
 
-#### `__record_dropped(output_dir, sub_id, info)`
-Under a `FileLock` (`params.json.lock`), reads `PreProcessed-Datasets/<output_dir>/params.json`, sets `params["dropped"][sub_id] = info`, and writes the file back.
+#### `__record_dropped(output_dir, rec_key, info)`
+Under a `FileLock` (`params.json.lock`), reads `PreProcessed-Datasets/<output_dir>/params.json`, sets `params["dropped"][rec_key] = info`, and writes the file back. `rec_key` is `"recording_<record_idx>"`, and `info` includes the `subject` plus the reason.
 
 #### `_process_single_subject(record, output_dir, ..., record_idx)`
-Runs the whole pipeline for one recording (see the diagram in §2). It runs inside a worker when `n_jobs > 1`.
+Runs the whole pipeline for **one recording** (see the diagram in §2); the name is historical. It runs inside a worker when `n_jobs > 1`.
 
-1. Gets the subject id from `record.description['subject']`.
-2. Skip checks: an existing output folder whose `description.json` has the same subject, then `params.json["dropped"]` (read under the lock). Both apply only when `overwrite=False`.
+1. Gets the subject id from `record.description['subject']` (used in prints, PSD titles and `dropped` entries) and builds `rec_key = "recording_<record_idx>"`.
+2. Skip checks, only when `overwrite=False`: `PreProcessed-EEG/<record_idx>/description.json` exists (already saved), then `rec_key` in `params.json["dropped"]` (read under the lock).
 3. Wraps the record in its own `BaseConcatDataset` so preprocessing touches only that recording.
 4. Stage 1 → tolerance check → Stage 2.
 5. `create_fixed_length_windows(window_size, stride=window_size, on_last_window='drop', preload=True)`.
@@ -419,24 +449,25 @@ Runs the whole pipeline for one recording (see the diagram in §2). It runs insi
 
 ---
 
-## 7. Resuming, skipping and dropped subjects
+## 7. Resuming, skipping and dropped recordings
 
-Long runs can be interrupted and restarted without redoing work:
+Long runs can be interrupted and restarted without redoing work. Everything is tracked **per recording** (`record_idx`):
 
 | Situation | `overwrite=False` | `overwrite=True` |
 |---|---|---|
-| Subject already saved | skipped | reprocessed and saved again |
-| Subject in `params.json["dropped"]` | skipped | retried |
-| `params.json` exists | parameters replaced, `dropped` kept | same |
+| Recording already saved (`PreProcessed-EEG/<record_idx>/description.json` exists) | skipped | reprocessed and saved again |
+| `recording_<record_idx>` in `params.json["dropped"]` | skipped | retried |
+| `params.json` exists, same settings (`n_jobs` ignored) | `dropped` kept | same |
+| `params.json` exists, different settings | asks: **y** = run with the saved settings (`dropped` kept); **n** = run with the new settings, `overwrite` forced to `True` and `dropped` cleared | same |
 | `params.json` exists but is corrupted | run stops with a JSON error (so `dropped` isn't silently lost) | same |
 
-A subject is added to `dropped` when:
+A recording is added to `dropped` when:
 - it has **too many bad channels** (stores the list and counts); or
 - **any exception** happens while processing it (stores the error message).
 
-To retry only one subject, delete its entry from `params.json["dropped"]` and run again with `overwrite=False`.
+To retry only one recording, delete its entry from `params.json["dropped"]` and run again with `overwrite=False`. After fixing a bug that made many recordings fail, remove every entry with that `error` (keep the "Too many bad channels" ones).
 
-> Changing preprocessing parameters with `overwrite=False` does **not** reprocess subjects that are already saved, so the output folder can end up with a mix of old and new parameters. Use a new `output_dir` or `overwrite=True` after changing parameters (e.g. adding `notch_freqs` or changing `value_multiplier`).
+> The settings comparison protects against mixing parameters in one output folder: answering **n** reprocesses everything with the new settings. The prompt uses `input()`, so unattended runs with changed settings block there; use a new `output_dir` for them instead.
 
 ---
 
@@ -469,14 +500,14 @@ If the dataset already uses standard names, pass `channels_treatment=None`.
 
 | # | Issue | Where |
 |---|---|---|
-| 1 | Auto-detection with several matching montages calls `input()`, which blocks unattended runs (cluster / `nohup`). Datasets with standard 10-20 names match several montages (`colin27_*`, `fsaverage_*`, `spherical_*`), so they always ask. Pass `montage=` explicitly in those cases | [preprocessing.py:504](preprocessing.py#L504) |
-| 2 | The montage is detected from the **first** recording only and reused for all others. Montage auto-detection also loads that first recording in the main process | [preprocessing.py:769](preprocessing.py#L769) |
-| 3 | `self.montage` is kept between calls. Reusing one `DatasetManager` for several datasets without passing `montage=` skips auto-detection for the later ones and applies the first dataset's montage. Use a new `DatasetManager` per dataset, or pass `montage=` | [preprocessing.py:766](preprocessing.py#L766) |
-| 4 | Recordings are identified by **subject** only. If a subject has several recordings (sessions / tasks / runs), the later ones are skipped as "already saved", their PSD images overwrite each other, and dropping one drops the whole subject. Fine for datasets with one recording per subject (e.g. DS006576) | [preprocessing.py:579](preprocessing.py#L579) |
-| 5 | `subject_limit` counts recordings, not subjects | [preprocessing.py:326](preprocessing.py#L326) |
-| 6 | Any exception marks the subject as dropped, including transient ones (I/O, interrupted download). Retry with `overwrite=True` or edit `params.json` | [preprocessing.py:716](preprocessing.py#L716) |
-| 7 | The final "Succesfully processed" count includes skipped subjects | [preprocessing.py:856](preprocessing.py#L856) |
-| 8 | The `montage` argument of `_process_single_subject` is unused (`self.montage` is used instead) | [preprocessing.py:575](preprocessing.py#L575) |
+| 1 | Auto-detection with several matching montages calls `input()`, which blocks unattended runs (cluster / `nohup`). Datasets with standard 10-20 names match several montages (`colin27_*`, `fsaverage_*`, `spherical_*`), so they always ask. Pass `montage=` explicitly in those cases. The settings-changed prompt for `params.json` also uses `input()` | [preprocessing.py:556](preprocessing.py#L556), [preprocessing.py:856](preprocessing.py#L856) |
+| 2 | The montage is detected from the **first** recording only and reused for all others. Montage auto-detection also loads that first recording in the main process | [preprocessing.py:815](preprocessing.py#L815) |
+| 3 | `self.montage` is kept between calls. Reusing one `DatasetManager` for several datasets without passing `montage=` skips auto-detection for the later ones and applies the first dataset's montage. Use a new `DatasetManager` per dataset, or pass `montage=` | [preprocessing.py:811](preprocessing.py#L811) |
+| 4 | Recordings are identified by their **position** (`record_idx`) in the loaded dataset. Changing `subject_limit` is safe (it keeps a prefix), but if the dataset's order or content changes (new dataset version, different loader filters), saved folders and `dropped` keys point to different recordings. Use a new `output_dir` (or `overwrite=True`) in that case | [preprocessing.py:639](preprocessing.py#L639) |
+| 5 | `subject_limit` counts recordings, not subjects | [preprocessing.py:320](preprocessing.py#L320) |
+| 6 | Any exception marks the recording as dropped, including transient ones (I/O, interrupted download). Retry with `overwrite=True` or edit `params.json` | [preprocessing.py:760](preprocessing.py#L760) |
+| 7 | The final "Succesfully processed subjects" count includes skipped recordings, and counts recordings, not subjects | [preprocessing.py:917](preprocessing.py#L917) |
+| 8 | The `montage` argument of `_process_single_subject` is unused (`self.montage` is used instead) | [preprocessing.py:628](preprocessing.py#L628) |
 | 9 | Artifact removal only works if EOG/ECG channels have the right MNE **type**. If they are typed `eeg`, step 7 is skipped and the montage check may fail on them | `__eliminate_artifacts` |
 | 10 | `value_multiplier` must be chosen per dataset; nothing checks the unit during preprocessing. `models_bench.py` only warns afterwards (median \|x\| > 1e-3 V) | `__apply_multiplier` |
 
@@ -492,9 +523,14 @@ from models_bench import BenchBrainomni, BenchLabram, BenchCBraMod
 windows_path = "PreProcessed-Datasets/DS006576/PreProcessed-EEG"   # output of preprocess_and_window
 
 bench = BenchBrainomni(windows_path, "DS006576", batch_size=16)  # verifies the windows, then loads the model
-for mode in ["avg", "median", "std", "windows"]:
-    bench.use_latent_space(mode)       # encodes (once, cached) and aggregates
-    bench.umap()                       # one PNG per metadata label
+
+bench.use_latent_space("windows")      # one point per window (encodes once, cached)
+bench.umap()                           # one PNG per metadata label + event UMAPs (all / by recording / by subject)
+
+for group_by in ["recording", "subject"]:
+    for mode in ["avg", "median", "std"]:
+        bench.use_latent_space(mode, group_by=group_by)  # reuses the cached window embeddings
+        bench.umap()                                     # one PNG per metadata label
 ```
 
 The constructor checks the windows against the model's requirements **before** loading or downloading the model, so an incompatible dataset fails fast with a report. See [main.py](main.py) (`bench`) for the loop over all datasets and models used in this project.
@@ -506,27 +542,38 @@ The constructor checks the windows against the model's requirements **before** l
 ```
 BenchModel(windows_path, ds_name)
  │
- ├─ load_concat_dataset(windows_path, preload=False)   lazy: one entry per subject/recording
+ ├─ load_concat_dataset(windows_path, preload=False)   lazy: one entry per recording
  ├─ verify_windows()                                   errors ─► ValueError, before loading the model
  └─ load_model() ─► .to(device) ─► .eval()
 
-use_latent_space(mode, limit=0, z_score=None)
+use_latent_space(mode, limit=0, z_score=None, group_by="recording")
  │
  ├─ encode_windows(limit)          cached in latent_space_collection/ (runs the model only once)
- │   └─ for each subject:
+ │   └─ for each recording:
  │        select_channels(ch_names)                    model specific (default: all channels)
- │        __prepare(window_ds, picks, sfreq)           all windows of the subject:
+ │        __prepare(window_ds, picks, sfreq)           all windows of the recording:
  │          ├─ WINDOW_SIZE is None:  resample each window to SFREQ
  │          └─ WINDOW_SIZE is set:   join the windows ─► resample once ─► split in WINDOW_SIZE
  │          ├─ × V_TO_MODEL                            Volts ─► model units
  │          └─ z-score per channel (if z_score)
  │        embed(batch) in batches of batch_size        model specific ─► [batch, latent_dim]
+ │   returns (window embeddings, recording index of each window)
  │
  └─ mode == "windows" ─► one point per window
-    otherwise         ─► avg / median / std over the windows of each subject ─► one point per subject
+    otherwise         ─► avg / median / std over the windows of each group ─► one point per group
+                             group_by="recording": windows of one recording (subject/session/run)
+                             group_by="subject":   windows of every recording of the subject
 
 umap()
- └─ UMAP(cosine) of the points ─► one scatter plot per metadata column of the dataset description
+ ├─ labels = metadata (description) of each point's recording; all-N/A columns skipped
+ │     group_by="subject": only columns constant inside each subject (session, run... are dropped)
+ ├─ UMAP(cosine) of the points ─► one scatter plot per label
+ └─ mode == "windows" ─► __events_umap()
+       __window_events(): event (annotation) under the center of each window, "misc" if none
+       misc windows dropped, then one UMAP labelled by event:
+         ├─ all recordings together            umap_plots/<DS>/..._label_event.png
+         ├─ one per recording                  umap_plots/<DS>/recordings_events/
+         └─ one per subject (all its recordings) umap_plots/<DS>/subjects_events/
 ```
 
 ---
@@ -538,7 +585,7 @@ Each model declares what it needs as **class attributes**. `__prepare` adapts th
 | Attribute | Default | Meaning |
 |---|---|---|
 | `SFREQ` | `None` | Sampling rate the model expects. Windows at another rate are resampled with `scipy.signal.resample_poly` (polyphase FIR with anti-aliasing). `None` = keep the preprocessed rate |
-| `WINDOW_SIZE` | `None` | Samples per model window, after resampling. Windows are **regrouped**: the subject's windows are joined back into one continuous signal (they are contiguous, since preprocessing uses stride = window size), resampled once, and split into `WINDOW_SIZE` chunks. Only the incomplete last chunk of each subject is dropped. `None` = keep the preprocessed windows |
+| `WINDOW_SIZE` | `None` | Samples per model window, after resampling. Windows are **regrouped**: the recording's windows are joined back into one continuous signal (they are contiguous, since preprocessing uses stride = window size), resampled once, and split into `WINDOW_SIZE` chunks. Only the incomplete last chunk of each recording is dropped. `None` = keep the preprocessed windows |
 | `MIN_CHANNELS` | `1` | Minimum usable channels after `select_channels` |
 | `REQUIRES_POSITIONS` | `False` | Every used channel needs a valid 3D position (montage) |
 | `V_TO_MODEL` | `1.0` | Multiplier from Volts to the units the model was pre-trained with (`1e6` = µV, `1e4` = 100 µV) |
@@ -546,7 +593,7 @@ Each model declares what it needs as **class attributes**. `__prepare` adapts th
 
 ### Regrouping examples (`WINDOW_SIZE`)
 
-For a subject with 3 preprocessed windows of 50 samples (150 samples in total):
+For a recording with 3 preprocessed windows of 50 samples (150 samples in total):
 
 | `WINDOW_SIZE` | Model windows | Dropped |
 |---|---|---|
@@ -554,22 +601,22 @@ For a subject with 3 preprocessed windows of 50 samples (150 samples in total):
 | `75` | 2 (0–75, 75–150) | 0 |
 | `100` | 1 (two windows joined) | last 50 samples |
 
-So the preprocessing `window_size` doesn't have to match any model. It only has to give each subject at least one full `WINDOW_SIZE` after resampling.
+So the preprocessing `window_size` doesn't have to match any model. It only has to give each recording at least one full `WINDOW_SIZE` after resampling.
 
 ### What `verify_windows` checks
 
 | Check | Result |
 |---|---|
-| Subject with no windows | error |
+| Recording with no windows | error |
 | Fewer usable channels than `MIN_CHANNELS` | error |
 | Whole recording shorter than one `WINDOW_SIZE` (after resampling) | error |
 | `REQUIRES_POSITIONS` and a channel without valid position (NaN / zeros) | error |
 | Sampling rate different from `SFREQ` | warning (will be resampled) |
 | Window size different from `WINDOW_SIZE` | warning (will be regrouped) |
-| Subjects with different sampling rates / window sizes | warning |
+| Recordings with different sampling rates / window sizes | warning |
 | First window has median \|x\| > 1e-3 (doesn't look like Volts) | warning: preprocess with `value_multiplier=1e-6` if the data is in µV |
 
-It prints a report (subjects, sampling rates, window sizes, usable channels, model specs, warnings, errors) and raises `ValueError` if there is any error.
+It prints a report (recordings, sampling rates, window sizes, usable channels, model specs, warnings, errors) and raises `ValueError` if there is any error.
 
 ### Units and z-score
 
@@ -582,7 +629,7 @@ Preprocessing saves the windows in **Volts** (the MNE convention; see `value_mul
 | Class | `MODEL_NAME` | `SFREQ` | `WINDOW_SIZE` | `V_TO_MODEL` | `Z_SCORE` | Channels | Weights |
 |---|---|---|---|---|---|---|---|
 | `BenchBrainomni` | `brainomni_base` | 256 | 512 (2 s) | `1e6` (µV) | `True` | all; needs 3D positions | Hugging Face `OpenTSLab/BrainOmni` (`base/`), downloaded to `ckpt_collection/` |
-| `BenchLabram` | `labram` | 200 | `None` | `1e6` (µV) | `False` | only names known by LaBraM (others dropped, printed) | `braindecode/labram-pretrained` |
+| `BenchLabram` | `labram` | 200 | 3000 (15 s) | `1e6` (µV) | `False` | only names known by LaBraM (others dropped, printed) | `braindecode/labram-pretrained` |
 | `BenchCBraMod` | `cbramod` | 200 | `None` | `1e4` (100 µV) | `False` | all | `braindecode/cbramod-pretrained` |
 
 Each class docstring lists the preprocessing used in the model's paper.
@@ -596,7 +643,7 @@ Each class docstring lists the preprocessing used in the model's paper.
 ### LaBraM
 
 - **Paper preprocessing:** 0.1–75 Hz band-pass, 50 Hz notch, 200 Hz, µV.
-- **Window length:** patches of 200 samples (1 s), so the model window must be a **multiple of 200**, up to 3000 samples (15 patches) for the pre-trained weights. With `WINDOW_SIZE = None`, the preprocessed window after resampling must already satisfy this (e.g. 512 samples at 256 Hz → 400 at 200 Hz). Set `WINDOW_SIZE = 200` (or another multiple) to make it independent of the preprocessing.
+- **Window length:** patches of 200 samples (1 s). The pre-trained position/temporal embeddings are fixed to 15 patches, so the model only accepts exactly **3000 samples** (15 s): `WINDOW_SIZE = 3000`, and the preprocessed windows are regrouped into 15 s windows. Each recording therefore yields far fewer windows than for BrainOmni (e.g. 900 vs 6948 on BNCI2014_001), and one window can span several trials/events.
 - **Channels:** positional embeddings are chosen by channel name, so channels not in `LABRAM_CHANNEL_ORDER` are dropped.
 - **Embedding:** `return_features=True` features, averaged over channel/patch tokens.
 
@@ -620,29 +667,44 @@ Each class docstring lists the preprocessing used in the model's paper.
 
 Uses CUDA when available, otherwise CPU.
 
-### `use_latent_space(mode="avg", limit=0, z_score=None)`
+### `use_latent_space(mode="avg", limit=0, z_score=None, group_by="recording")`
 
 | Param | Description |
 |---|---|
-| `mode` | `"avg"`, `"median"`, `"std"`: one vector per subject (aggregated over its windows). `"windows"`: one vector per model window |
-| `limit` | Encode only the first *N* subjects/recordings (`0` = all). Cached separately |
+| `mode` | `"avg"`, `"median"`, `"std"`: one vector per group (aggregated over its windows). `"windows"`: one vector per model window |
+| `limit` | Encode only the first *N* recordings (`0` = all). Cached separately |
 | `z_score` | `None` = the model's `Z_SCORE`; `True` / `False` forces it |
+| `group_by` | `"recording"`: one point per recording (subject/session/run). `"subject"`: one point per subject, aggregating the windows of all its recordings (uses the `subject` column of the description). Ignored for `"windows"` |
 
-Sets `final_features` (`[N_points, latent_dim]`) and `subject_ids`, and saves aggregated features to disk.
+Sets `final_features` (`[N_points, latent_dim]`) and `subject_ids`, and saves aggregated features to disk. Despite its name, `subject_ids` holds a **recording index** per point: the window's recording in `"windows"` mode, or one representative recording of the group otherwise (its metadata labels the point).
 
 ### `encode_windows(limit=0)`
 
-Runs the model over every window and returns `(embeddings [N_windows, latent_dim], subject_ids [N_windows])`. Loaded from cache if it exists. Called by `use_latent_space`; call it directly only if you need the raw window embeddings.
+Runs the model over every window and returns `(embeddings [N_windows, latent_dim], recording_ids [N_windows])`. Loaded from cache if it exists. Called by `use_latent_space`; call it directly only if you need the raw window embeddings.
 
 ### `umap()`
 
-Fits `umap.UMAP(n_neighbors=min(5, N-1), min_dist=0.1, metric="cosine", random_state=42)` on `final_features` and saves one plot per column of the dataset `description` (columns that are all N/A are skipped):
+Fits `umap.UMAP(min_dist=0.1, metric="cosine", random_state=42, init="random")` on `final_features`, with `n_neighbors = min(15, N-1)` for `"windows"` (many points) and `min(5, N-1)` for aggregated points. Skipped if there are fewer than 3 points. Then it saves one plot per column of the dataset `description` (columns that are all N/A are skipped; with `group_by="subject"`, columns that vary inside a subject, like `session` or `run`, are skipped too):
 
 - columns containing `age` → continuous colormap with a colorbar;
 - `subject` → each point labelled with its subject id;
 - anything else → categorical legend.
 
-Call `use_latent_space` first.
+In `"windows"` mode it also draws the **event UMAPs** (see below). Call `use_latent_space` first.
+
+The UMAP is fitted in a separate (spawned) process: numba, which UMAP uses, can segfault while compiling on some machines. A crash is retried up to 5 times; `random_state=42` makes every attempt give the same embedding.
+
+### Event UMAPs (`"windows"` mode)
+
+Each window gets the description of the annotation under its **center** (e.g. `left_hand`, `feet` in BNCI2014_001), or `"misc"` if it falls outside every annotation. Window times are rebuilt from the first window's start and the model window duration, so they stay correct after resampling/regrouping. Windows labelled `"misc"` are dropped, and a new UMAP is fitted for each of:
+
+| Plot | Where |
+|---|---|
+| Every recording together | `umap_plots/<DS>/<plot name>_label_event.png` |
+| One per recording | `umap_plots/<DS>/recordings_events/<plot name>_recording_<idx>_label_event.png` |
+| One per subject (windows of all its recordings) | `umap_plots/<DS>/subjects_events/<plot name>_subject_<id>_label_event.png` |
+
+All of them use the same event → color mapping. Groups with fewer than 3 event windows are skipped. Nothing is drawn if the windows have no annotations (e.g. resting-state datasets).
 
 ### `verify_windows()`
 
@@ -650,7 +712,7 @@ Called by the constructor (see [§12](#what-verify_windows-checks)). Can be call
 
 ### `window_info(window_ds)` (static)
 
-Returns the `mne.Info` of one subject's windows, for both raw-based and epochs-based Braindecode window datasets.
+Returns the `mne.Info` of one recording's windows, for both raw-based and epochs-based Braindecode window datasets.
 
 ---
 
@@ -663,15 +725,23 @@ Relative to the **current working directory**:
 ├── ckpt_collection/                          ← downloaded weights (BrainOmni only; braindecode models use the HF cache)
 ├── latent_space_collection/
 │   ├── <MODEL>_<DS>_latent_space_windows[_with_z_score][_limit_N].pt              ← window embeddings (the cache)
-│   ├── <MODEL>_<DS>_latent_space_windows[_with_z_score][_limit_N]_subject_ids.pt  ← subject of each window
-│   └── <MODEL>_<DS>_latent_space_{avg,median,std}[_with_z_score][_limit_N].pt     ← per-subject features
+│   ├── <MODEL>_<DS>_latent_space_windows[_with_z_score][_limit_N]_subject_ids.pt  ← recording index of each window
+│   └── <MODEL>_<DS>_latent_space_{avg,median,std}_by_{recording,subject}[_with_z_score][_limit_N].pt  ← aggregated features
 └── umap_plots/<DS>/
-    └── <MODEL>_<DS>_<mode>_umap[_with_z_score]_label_<column>.png
+    ├── <MODEL>_<DS>_windows_umap[_with_z_score]_label_<column>.png
+    ├── <MODEL>_<DS>_windows_umap[_with_z_score]_label_event.png                   ← events, every recording
+    ├── <MODEL>_<DS>_{avg,median,std}_by_{recording,subject}_umap[_with_z_score]_label_<column>.png
+    ├── recordings_events/
+    │   └── <MODEL>_<DS>_windows_umap[_with_z_score]_recording_<idx>_label_event.png
+    └── subjects_events/
+        └── <MODEL>_<DS>_windows_umap[_with_z_score]_subject_<id>_label_event.png
 ```
 
-`encode_windows` runs the model **once** per dataset / z-score / limit combination; every `mode` reuses the cached window embeddings.
+`encode_windows` runs the model **once** per dataset / z-score / limit combination; every `mode` and `group_by` reuses the cached window embeddings. Aggregation is cheap and recomputed on every call (the aggregated `.pt` files are outputs, not a cache).
 
-> **Stale cache:** the cache file name only records the dataset, z-score and limit. After changing anything else (preprocessing, `SFREQ`, `WINDOW_SIZE`, `V_TO_MODEL`, `embed`, model weights), **delete the model's `latent_space_collection/` files** for that dataset, or the old embeddings are loaded silently.
+Files named `..._latent_space_{avg,median,std}.pt` or `..._{avg,median,std}_umap...png` without `_by_<group>` come from older runs (before `group_by` existed; they were per recording).
+
+> **Stale cache:** the cache file name only records the dataset, z-score and limit, and the cache isn't checked against the number of recordings. After changing anything else (re-running the preprocessing, `SFREQ`, `WINDOW_SIZE`, `V_TO_MODEL`, `embed`, model weights), **delete the model's `latent_space_collection/` files** for that dataset, or the old embeddings are loaded silently.
 
 ---
 
@@ -721,10 +791,13 @@ Everything else (verification, resampling, regrouping, units, z-score, batching,
 
 | # | Issue | Where |
 |---|---|---|
-| 1 | The cache isn't invalidated when model settings or preprocessing change (see [§15](#15-benchmark-output-layout-and-caching)) | [models_bench.py:229](models_bench.py#L229) |
-| 2 | `__prepare` loads all windows of one subject into RAM at once (needed to rebuild the continuous signal). Long recordings with many channels use more memory; GPU memory is still limited by `batch_size` | [models_bench.py:194](models_bench.py#L194) |
-| 3 | The unit check looks only at the **first window** of each subject | [models_bench.py:157](models_bench.py#L157) |
-| 4 | With `WINDOW_SIZE = None`, each window is resampled on its own, which adds small edge effects at every window boundary. With `WINDOW_SIZE` set, the subject is resampled once | [models_bench.py:202](models_bench.py#L202) |
-| 5 | LaBraM and CBraMod have `WINDOW_SIZE = None`: the preprocessed `window_size` should give a multiple of 200 samples at 200 Hz (≤ 3000 for LaBraM), otherwise the window doesn't split into whole patches. Nothing checks this before encoding | `BenchLabram`, `BenchCBraMod` |
+| 1 | The cache isn't invalidated when model settings or preprocessing change, and isn't checked against the number of recordings (see [§15](#15-benchmark-output-layout-and-caching)) | [models_bench.py:277](models_bench.py#L277) |
+| 2 | `__prepare` loads all windows of one recording into RAM at once (needed to rebuild the continuous signal). Long recordings with many channels use more memory; GPU memory is still limited by `batch_size` | [models_bench.py:208](models_bench.py#L208) |
+| 3 | The unit check looks only at the **first window** of each recording | [models_bench.py:166](models_bench.py#L166) |
+| 4 | With `WINDOW_SIZE = None`, each window is resampled on its own, which adds small edge effects at every window boundary. With `WINDOW_SIZE` set, the recording is resampled once | [models_bench.py:212](models_bench.py#L212) |
+| 5 | CBraMod has `WINDOW_SIZE = None`: the preprocessed `window_size` should give a multiple of 200 samples at 200 Hz, otherwise the window doesn't split into whole patches. Nothing checks this before encoding | `BenchCBraMod` |
 | 6 | Window embeddings are averaged over all tokens (channels and patches); no model-specific pooling (e.g. CLS token) is used | `embed` methods |
-| 7 | `BenchBrainomni` treats every channel as EEG (`sensor_type = 0`) and passes zeros as sensor orientation | [models_bench.py:408](models_bench.py#L408) |
+| 7 | `BenchBrainomni` treats every channel as EEG (`sensor_type = 0`) and passes zeros as sensor orientation | [models_bench.py:577](models_bench.py#L577) |
+| 8 | With `group_by="subject"`, each point is labelled with the metadata of its subject's first recording; columns that vary inside a subject are skipped, so only subject-level labels (subject, sex, group...) are plotted | [models_bench.py:393](models_bench.py#L393) |
+| 9 | Event labels use only the annotation under the window **center**. Windows longer than a trial (e.g. LaBraM's 15 s) span several events but get one label; event UMAPs need raw-based windows whose saved raw keeps its annotations | [models_bench.py:462](models_bench.py#L462) |
+| 10 | Few aggregated points (e.g. 9 subjects) give a UMAP with `n_neighbors` ≤ 5 that mostly reflects noise; read those plots with care | [models_bench.py:415](models_bench.py#L415) |
