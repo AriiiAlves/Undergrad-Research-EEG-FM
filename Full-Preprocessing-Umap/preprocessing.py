@@ -794,22 +794,36 @@ class DatasetManager():
         try:
             with open(f"{self.DATASETS_DIR}/{output_dir}/params.json", "r") as f:
                 loaded_params = json.load(f)
-                print("Already existing params.json. Overwriting parameters and keeping dropped subjects")
-                if("dropped" in loaded_params.keys()):
-                    params["dropped"] = loaded_params["dropped"]
+            print("Already existing params.json found")
+            dropped = loaded_params.pop("dropped", {})
 
-                # Logic if params.json already has a montage
-                old_montage = loaded_params.get("montage")
-                if(old_montage and self.montage != old_montage):
-                    r = None
-                    while(r != "y" and r != "n"):
-                        r = str(input(f"The dataset was preprocessed with the following old montage: {old_montage}. do you want to overwrite it with {self.montage}? (all the previous processed recordings will be overwrited) (y/n): ")).lower()
-                    if(r == "y"):
-                        overwrite = True
-                    else:
-                        self.montage = old_montage
-
-                    params["montage"] = self.montage
+            # Compare the saved settings with the new ones (n_jobs only changes the speed, not the result)
+            # json round trip, so the new settings have the same types as the saved ones (e.g. tuple -> list)
+            new_params = json.loads(json.dumps(params))
+            different = [key for key in new_params if key != "n_jobs" and loaded_params.get(key, "(not saved)") != new_params[key]]
+            if(different):
+                self.__print_section("SAVED PARAMS.JSON vs NEW SETTINGS")
+                print(f"{'Setting':<20}{'Saved (params.json)':<28}{'New':<28}")
+                for key in new_params:
+                    print(f"{key:<20}{str(loaded_params.get(key, '(not saved)')):<28}{str(new_params[key]):<28}{'<- different' if key in different else ''}")
+                r = None
+                while(r != "y" and r != "n"):
+                    r = str(input("Settings are different. Use the saved params.json? (overwrite params.json with new settings will reprocess all subjects) (y/n): ")).lower()
+                if(r == "y"):
+                    # Saved settings replace the new ones (keys missing in an old params.json keep the new value)
+                    saved = {key: loaded_params.get(key, value) for key, value in params.items()}
+                    saved["n_jobs"] = n_jobs
+                    params = saved
+                    l_freq, h_freq, down_freq, bad_ch_tolerance = saved["l_freq"], saved["h_freq"], saved["down_freq"], saved["bad_ch_tolerance"]
+                    ransac, ica, window_size, ref_channels = saved["ransac"], saved["ica"], saved["window_size"], saved["ref_channels"]
+                    treat_artifacts, value_multiplier, notch_freqs = saved["treat_artifacts"], saved["value_multiplier"], saved["notch_freqs"]
+                    self.montage = saved["montage"]
+                else:
+                    # Recordings processed with the old settings would be mixed with the new ones: reprocess everyone,
+                    # and forget the dropped subjects (they were dropped with the old settings)
+                    overwrite = True
+                    dropped = {}
+            params["dropped"] = dropped
         except FileNotFoundError: # Other errors (e.g. corrupted json) must stop, or the dropped subjects would be lost
             print("params.json not found. Creating new one.")
 
