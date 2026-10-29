@@ -43,18 +43,18 @@ def bench():
         base_windows_path = f"./PreProcessed-Datasets/{DS_NAME.upper()}/PreProcessed-EEG"
 
         benchBrainomni = BenchBrainomni(base_windows_path, DS_NAME.upper())
-        benchLabram = BenchLabram(base_windows_path, DS_NAME.upper())
-        benchCbramod = BenchCBraMod(base_windows_path, DS_NAME.upper())
+        #benchLabram = BenchLabram(base_windows_path, DS_NAME.upper())
+        #benchCbramod = BenchCBraMod(base_windows_path, DS_NAME.upper())
 
         # Every aggregation (avg/windows/median/std)
         for mode in ["avg", "windows", "median", "std"]:
             benchBrainomni.use_latent_space(mode)
             benchBrainomni.umap()
-            benchLabram.use_latent_space(mode)
-            benchLabram.umap()
-            benchCbramod.use_latent_space(mode)
-            benchCbramod.umap()
+            #benchLabram.use_latent_space(mode)
+            #benchLabram.umap()
+            #benchCbramod.use_latent_space(mode)
+            #benchCbramod.umap()
 
 if __name__ == "__main__":
-    preprocess()
+    #preprocess()
     bench()

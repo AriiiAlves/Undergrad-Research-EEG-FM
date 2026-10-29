@@ -1,0 +1,260 @@
+{
+    "l_freq": 0.1,
+    "h_freq": 75,
+    "down_freq": 256,
+    "bad_ch_tolerance": 0.2,
+    "ransac": true,
+    "ica": true,
+    "window_size": 512,
+    "n_jobs": 4,
+    "ref_channels": [],
+    "montage": "colin27_1020",
+    "treat_artifacts": true,
+    "value_multiplier": 1.0,
+    "notch_freqs": [
+        50,
+        60
+    ],
+    "dropped": {
+        "105": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "PO4",
+                "AFz",
+                "TP8",
+                "Fz",
+                "AF8",
+                "AF4",
+                "T8",
+                "FT8",
+                "P2",
+                "CP1",
+                "FC4",
+                "O2",
+                "PO8"
+            ],
+            "n_bad_channels": 13,
+            "n_total_channels": 64
+        },
+        "106": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "Oz",
+                "Pz",
+                "O1",
+                "T7",
+                "Fp2",
+                "FT8",
+                "AF7",
+                "FT7",
+                "Fpz",
+                "AF8",
+                "Fp1",
+                "C3",
+                "Iz",
+                "P5"
+            ],
+            "n_bad_channels": 14,
+            "n_total_channels": 64
+        },
+        "112": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "P10",
+                "Oz",
+                "F3",
+                "CPz",
+                "O1",
+                "Pz",
+                "C3",
+                "F4",
+                "CP1",
+                "FC1",
+                "T8",
+                "AF3",
+                "AF4",
+                "Iz"
+            ],
+            "n_bad_channels": 14,
+            "n_total_channels": 64
+        },
+        "116": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "P9",
+                "P10",
+                "Cz",
+                "TP7",
+                "POz",
+                "P4",
+                "FC5",
+                "P6",
+                "O1",
+                "Pz",
+                "Oz",
+                "F1",
+                "PO4",
+                "P7",
+                "CP1",
+                "FC1",
+                "FC3",
+                "Iz"
+            ],
+            "n_bad_channels": 18,
+            "n_total_channels": 64
+        },
+        "126": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "PO7",
+                "Oz",
+                "P3",
+                "FC3",
+                "P5",
+                "O1",
+                "Iz",
+                "P2",
+                "Pz",
+                "P9",
+                "POz",
+                "P7",
+                "P1",
+                "CPz"
+            ],
+            "n_bad_channels": 14,
+            "n_total_channels": 64
+        },
+        "140": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "PO4",
+                "O2",
+                "C2",
+                "TP7",
+                "Fp2",
+                "FT7",
+                "P3",
+                "POz",
+                "PO3",
+                "PO7",
+                "C4",
+                "Fp1",
+                "P7",
+                "P5",
+                "P1",
+                "P8",
+                "T7",
+                "O1",
+                "Fpz",
+                "Pz",
+                "AF8",
+                "P9"
+            ],
+            "n_bad_channels": 22,
+            "n_total_channels": 64
+        },
+        "160": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "TP7",
+                "Cz",
+                "P1",
+                "Pz",
+                "T7",
+                "POz",
+                "CP1",
+                "P7",
+                "FT8",
+                "CP3",
+                "PO3",
+                "F5",
+                "FC4",
+                "PO7",
+                "P8",
+                "P9",
+                "P10"
+            ],
+            "n_bad_channels": 17,
+            "n_total_channels": 64
+        },
+        "161": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "P4",
+                "Pz",
+                "P6",
+                "O2",
+                "Iz",
+                "P7",
+                "PO8",
+                "PO7",
+                "P10",
+                "P1",
+                "PO4",
+                "O1",
+                "POz",
+                "P5",
+                "PO3",
+                "P3",
+                "P8",
+                "Oz"
+            ],
+            "n_bad_channels": 18,
+            "n_total_channels": 64
+        },
+        "170": {
+            "reason": "Processing error",
+            "error": "Required data file missing: [Errno 2] No such file or directory: '/exp/arielalves/Undergrad-Research-EEG-FM/Full-Preprocessing-Umap/data/on006576/sub-170/eeg/sub-170_task-rest_eeg.eeg'"
+        },
+        "178": {
+            "reason": "Processing error",
+            "error": "Required data file missing: [Errno 2] No such file or directory: '/exp/arielalves/Undergrad-Research-EEG-FM/Full-Preprocessing-Umap/data/on006576/sub-178/eeg/sub-178_task-rest_eeg.eeg'"
+        },
+        "174": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "CP2",
+                "PO4",
+                "C6",
+                "C4",
+                "P4",
+                "FC1",
+                "F3",
+                "FC4",
+                "P2",
+                "C3",
+                "FC3",
+                "Pz",
+                "PO8"
+            ],
+            "n_bad_channels": 13,
+            "n_total_channels": 64
+        },
+        "175": {
+            "reason": "Too many bad channels",
+            "bad_channels": [
+                "PO3",
+                "P9",
+                "CP6",
+                "T7",
+                "P7",
+                "F3",
+                "P8",
+                "Oz",
+                "FC3",
+                "PO8",
+                "P10",
+                "P5",
+                "O2",
+                "O1",
+                "TP7",
+                "T8",
+                "P2",
+                "PO7",
+                "POz"
+            ],
+            "n_bad_channels": 19,
+            "n_total_channels": 64
+        }
+    }
+}

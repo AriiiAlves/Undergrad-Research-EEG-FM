@@ -15,9 +15,9 @@ import numpy as np
 from scipy.signal import resample_poly
 
 base_dir = Path(__file__).resolve().parent  # Parent folder
-sys.path.append(str(base_dir / "BrainOmni")) # Where the brainomni files live
+sys.path.append(str(base_dir / "Models" / "BrainOmni")) # Tells Python which folder to look when importing BrainOmni's code
 
-from BrainOmni.brainomni.model import BrainOmni
+from Models.BrainOmni.brainomni.model import BrainOmni
 
 def fit_umap(features, n_neighbors):
     """
