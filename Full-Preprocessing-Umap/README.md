@@ -576,6 +576,28 @@ umap()
          └─ one per subject (all its recordings) umap_plots/<DS>/subjects_events/
 ```
 
+### How aggregation works (example with `group_by="subject"`)
+
+Aggregation happens **before** UMAP, in `use_latent_space()`. UMAP never sees the stacked windows of a group, only its single aggregated vector. Example with `latent_dim = 1000`, where sub-01 has two recordings:
+
+```
+Recording A (sub-01): 300 windows ─► [300, 1000] ┐
+                                                 ├─ stack ─► [400, 1000] ─ mean over windows (dim=0) ─► [1000]   ← sub-01's single point
+Recording B (sub-01): 100 windows ─► [100, 1000] ┘
+
+sub-01 ─► [1000]
+sub-02 ─► [1000]
+ ...
+sub-50 ─► [1000]
+           ↓
+UMAP input: [50, 1000] ─► 50 dots in the plot
+```
+
+- Only the **windows axis** collapses; the feature dimension (`latent_dim`) stays the same.
+- All windows of the group are **pooled first and aggregated once** ([models_bench.py:367](models_bench.py#L367)), so each **window** has equal weight, not each recording. Above, the result is `0.75 · mean_A + 0.25 · mean_B`, not `(mean_A + mean_B) / 2`. Longer recordings pull the subject's vector toward themselves.
+- `median` and `std` are taken per feature over the pooled windows. The pooled `std` also includes the shift between the subject's recordings, not only the variability inside each one.
+- `group_by="recording"` does the same with one group per recording (one dot per subject/session/run). `mode="windows"` skips aggregation: every window is its own dot (sub-01 would be 400 dots).
+
 ---
 
 ## 12. Model input requirements
@@ -801,3 +823,4 @@ Everything else (verification, resampling, regrouping, units, z-score, batching,
 | 8 | With `group_by="subject"`, each point is labelled with the metadata of its subject's first recording; columns that vary inside a subject are skipped, so only subject-level labels (subject, sex, group...) are plotted | [models_bench.py:393](models_bench.py#L393) |
 | 9 | Event labels use only the annotation under the window **center**. Windows longer than a trial (e.g. LaBraM's 15 s) span several events but get one label; event UMAPs need raw-based windows whose saved raw keeps its annotations | [models_bench.py:462](models_bench.py#L462) |
 | 10 | Few aggregated points (e.g. 9 subjects) give a UMAP with `n_neighbors` ≤ 5 that mostly reflects noise; read those plots with care | [models_bench.py:415](models_bench.py#L415) |
+| 11 | With `group_by="subject"`, windows of all the subject's recordings are pooled before aggregating, so recordings with more windows weigh more in the subject's point (see [How aggregation works](#how-aggregation-works-example-with-group_bysubject)) | [models_bench.py:367](models_bench.py#L367) |
