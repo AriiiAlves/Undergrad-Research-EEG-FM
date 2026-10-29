@@ -49,8 +49,8 @@ class BenchModel():
         self.DS_NAME = ds_name.strip().replace(" ","")
         # Directories
         model_dir = f"{self.BASE_DIR}/{self.MODEL_NAME}"
-        self.LATENT_SPACE_DIR = f"{model_dir}/latent_space_collection"
-        self.DS_PLOTS_DIR = f"{model_dir}/umap_plots/{ds_name}"
+        self.LATENT_SPACE_DIR = f"{model_dir}/latent_space_collection/{self.DS_NAME}"
+        self.DS_PLOTS_DIR = f"{model_dir}/umap_plots/{self.DS_NAME}" # One subfolder per mode (avg, median, std, windows)
         self.CHECKPOINTS_DIR = f"{model_dir}/ckpt_collection"
         for directory in (self.LATENT_SPACE_DIR, self.DS_PLOTS_DIR, self.CHECKPOINTS_DIR):
             os.makedirs(directory, exist_ok=True)
@@ -392,16 +392,20 @@ class BenchModel():
             labels = {column: values for column, values in labels.items()
                       if column == "subject" or not (description.groupby("subject")[column].nunique() > 1).any()}
         print(f"[{self.MODEL_NAME}] Labels to plot: {list(labels)}")
+        os.makedirs(self.__plots_dir(), exist_ok=True)
 
         # For umap: final_features.shape = [N_points, latent_dim] (same embedding for every label)
         embedding = self.__fit_umap(final_features)
 
         # Plot 2D umap graphic for each label
         for label_type, point_labels in labels.items():
-            self.__plot_umap(embedding, label_type, point_labels, f"{self.DS_PLOTS_DIR}/{self.__plot_name()}_label_{label_type}.png")
+            self.__plot_umap(embedding, label_type, point_labels, f"{self.__plots_dir()}/{self.__plot_name()}_label_{label_type}.png")
 
         if self.mode == "windows":
             self.__events_umap(final_features)
+
+    def __plots_dir(self):
+        return f"{self.DS_PLOTS_DIR}/{self.mode}"
 
     def __plot_name(self):
         group_suffix = f"_by_{self.group_by}" if self.mode != "windows" else ""
@@ -500,9 +504,9 @@ class BenchModel():
         hue_order = sorted(set(events[keep])) # Same color for each event in every plot
 
         embedding = self.__fit_umap(final_features[keep])
-        self.__plot_umap(embedding, "event", events[keep], f"{self.DS_PLOTS_DIR}/{self.__plot_name()}_label_event.png", hue_order=hue_order)
+        self.__plot_umap(embedding, "event", events[keep], f"{self.__plots_dir()}/{self.__plot_name()}_label_event.png", hue_order=hue_order)
 
-        recordings_dir = f"{self.DS_PLOTS_DIR}/recordings_events"
+        recordings_dir = f"{self.__plots_dir()}/recordings_events"
         os.makedirs(recordings_dir, exist_ok=True)
         subject_ids = self.subject_ids.numpy()
         for dataset_idx in np.unique(subject_ids[keep]):
@@ -516,7 +520,7 @@ class BenchModel():
 
         if "subject" not in self.loaded_windows.description:
             return
-        subjects_dir = f"{self.DS_PLOTS_DIR}/subjects_events"
+        subjects_dir = f"{self.__plots_dir()}/subjects_events"
         os.makedirs(subjects_dir, exist_ok=True)
         # Subject of each window (from the subject of its recording)
         window_subjects = self.loaded_windows.description["subject"].astype(str).to_numpy()[subject_ids]
