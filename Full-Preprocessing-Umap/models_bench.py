@@ -329,7 +329,8 @@ class BenchModel():
 
     def use_latent_space(self, mode="avg", limit=0, z_score=None, group_by="recording"):
         """
-        mode: "avg" | "median" | "std" (one vector by group) or "windows" (one vector by window).
+        mode: "avg" | "median" | "std" (one vector by group), "windows" (one vector by window, plots by label and event)
+              or "windows-detailed" ("windows" + the events UMAPs by recording and by subject, in recordings_events/ and subjects_events/).
         z_score: None uses the model default (Z_SCORE). True/False forces it.
         group_by: "recording" (one point by subject/session/run) or "subject" (every recording of a subject together). Ignored for "windows".
         """
@@ -338,9 +339,12 @@ class BenchModel():
             "median": lambda t: t.median(dim=0).values,
             "std": lambda t: t.std(dim=0, unbiased=False),
         }
-        assert mode in aggregations or mode == "windows", f"Invalid mode: {mode}"
+        assert mode in aggregations or mode in ("windows", "windows-detailed"), f"Invalid mode: {mode}"
         assert group_by in ("recording", "subject"), f"Invalid group_by: {group_by}"
 
+        # "windows-detailed" shares the embeddings, files and plots of "windows": it only adds the events UMAPs by recording/subject
+        self.detailed = mode == "windows-detailed"
+        mode = "windows" if self.detailed else mode
         self.mode = mode
         self.group_by = group_by
         self.z_score = self.Z_SCORE if z_score is None else z_score
@@ -375,7 +379,10 @@ class BenchModel():
         print(f"[{self.MODEL_NAME}] Saved aggregated latent space to {self.__latent_space_file(mode, limit)}")
 
     # -------------------------------- UMAP --------------------------------
-    def umap(self):
+    def umap(self, overwrite=False):
+        """
+        overwrite: False skips the plots that already exist (and the UMAP fit, if all of its plots exist). True regenerates them.
+        """
         assert self.final_features is not None, "Call use_latent_space() before umap()"
         final_features = self.final_features.cpu().numpy()
         print(f"[{self.MODEL_NAME}] UMAP input ({self.mode}) | shape={final_features.shape} ([N_points, latent_dim])")
@@ -394,15 +401,27 @@ class BenchModel():
         print(f"[{self.MODEL_NAME}] Labels to plot: {list(labels)}")
         os.makedirs(self.__plots_dir(), exist_ok=True)
 
-        # For umap: final_features.shape = [N_points, latent_dim] (same embedding for every label)
-        embedding = self.__fit_umap(final_features)
+        plot_paths = {label_type: f"{self.__plots_dir()}/{self.__plot_name()}_label_{label_type}.png" for label_type in labels}
+        plot_paths = {label_type: path for label_type, path in plot_paths.items() if not self.__skip(path, overwrite)}
+        if plot_paths:
+            # For umap: final_features.shape = [N_points, latent_dim] (same embedding for every label)
+            embedding = self.__fit_umap(final_features)
 
-        # Plot 2D umap graphic for each label
-        for label_type, point_labels in labels.items():
-            self.__plot_umap(embedding, label_type, point_labels, f"{self.__plots_dir()}/{self.__plot_name()}_label_{label_type}.png")
+            # Plot 2D umap graphic for each label
+            for label_type, plot_path in plot_paths.items():
+                self.__plot_umap(embedding, label_type, labels[label_type], plot_path)
 
         if self.mode == "windows":
-            self.__events_umap(final_features)
+            self.__events_umap(final_features, overwrite)
+
+    def __skip(self, plot_path, overwrite):
+        """
+        True if the plot already exists and must not be overwritten.
+        """
+        if overwrite or not os.path.exists(plot_path):
+            return False
+        print(f"[{self.MODEL_NAME}] Plot already exists, skipping (overwrite=False): {plot_path}")
+        return True
 
     def __plots_dir(self):
         return f"{self.DS_PLOTS_DIR}/{self.mode}"
@@ -491,10 +510,10 @@ class BenchModel():
                     events[position] = annotations.description[hit[0]]
         return events
 
-    def __events_umap(self, final_features):
+    def __events_umap(self, final_features, overwrite=False):
         """
-        UMAP of the windows inside an event (misc windows dropped), labeled by the event name: one with every recording,
-        one by recording (in recordings_events/) and one by subject, with every recording of the subject (in subjects_events/).
+        UMAP of the windows inside an event (misc windows dropped), labeled by the event name: one with every recording and,
+        only in "windows-detailed", one by recording (in recordings_events/) and one by subject, with every recording of the subject (in subjects_events/).
         """
         events = self.__window_events()
         keep = events != "misc"
@@ -503,8 +522,13 @@ class BenchModel():
             return
         hue_order = sorted(set(events[keep])) # Same color for each event in every plot
 
-        embedding = self.__fit_umap(final_features[keep])
-        self.__plot_umap(embedding, "event", events[keep], f"{self.__plots_dir()}/{self.__plot_name()}_label_event.png", hue_order=hue_order)
+        plot_path = f"{self.__plots_dir()}/{self.__plot_name()}_label_event.png"
+        if not self.__skip(plot_path, overwrite):
+            embedding = self.__fit_umap(final_features[keep])
+            self.__plot_umap(embedding, "event", events[keep], plot_path, hue_order=hue_order)
+
+        if not self.detailed:
+            return
 
         recordings_dir = f"{self.__plots_dir()}/recordings_events"
         os.makedirs(recordings_dir, exist_ok=True)
@@ -513,9 +537,12 @@ class BenchModel():
             recording = keep & (subject_ids == dataset_idx)
             if recording.sum() < 3: # UMAP needs n_neighbors >= 2
                 continue
+            plot_path = f"{recordings_dir}/{self.__plot_name()}_recording_{dataset_idx}_label_event.png"
+            if self.__skip(plot_path, overwrite):
+                continue
             subject = self.loaded_windows.description.iloc[dataset_idx].get("subject", "N/A")
             embedding = self.__fit_umap(final_features[recording])
-            self.__plot_umap(embedding, "event", events[recording], f"{recordings_dir}/{self.__plot_name()}_recording_{dataset_idx}_label_event.png",
+            self.__plot_umap(embedding, "event", events[recording], plot_path,
                              title=f"Event (Recording {dataset_idx}, Subject {subject})", hue_order=hue_order)
 
         if "subject" not in self.loaded_windows.description:
@@ -528,9 +555,12 @@ class BenchModel():
             windows = keep & (window_subjects == subject)
             if windows.sum() < 3: # UMAP needs n_neighbors >= 2
                 continue
+            plot_path = f"{subjects_dir}/{self.__plot_name()}_subject_{subject}_label_event.png"
+            if self.__skip(plot_path, overwrite):
+                continue
             n_recordings = len(np.unique(subject_ids[windows]))
             embedding = self.__fit_umap(final_features[windows])
-            self.__plot_umap(embedding, "event", events[windows], f"{subjects_dir}/{self.__plot_name()}_subject_{subject}_label_event.png",
+            self.__plot_umap(embedding, "event", events[windows], plot_path,
                              title=f"Event (Subject {subject}, {n_recordings} recordings)", hue_order=hue_order)
 
 class BenchBrainomni(BenchModel):
