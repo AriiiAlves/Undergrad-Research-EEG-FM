@@ -1,5 +1,6 @@
 # Import system utils
 import os
+import re
 from pathlib import Path
 import gc
 import json
@@ -320,15 +321,24 @@ class DatasetManager():
         if(subject_limit != 0):
             self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
     
-    def load_eegdash_dataset(self, dataset:str=None, subject_limit:int=0):
+    def load_eegdash_dataset(self, dataset:str=None, subject_limit:int=0, file_filter:str=None):
         """
-        EEGDash indexes hundreds of BIDS-formatted datasets from OpenNeuro/NEMAR (ds00xxxx IDs). 
+        EEGDash indexes hundreds of BIDS-formatted datasets from OpenNeuro/NEMAR (ds00xxxx IDs).
         These are mostly cognitive and clinical research recordings, not BCI benchmarks.
+
+        file_filter: keeps only the recordings whose BIDS file path contains it (e.g. "acq-epochs" in ds006923, which has an epoched
+        and a continuous file of each subject). None keeps every file. Files are only downloaded when processed, so the others are never downloaded.
         """
         assert self.get_eegdash_datasets(dataset), "[ERROR] Dataset does not exist in EEGDash database."
-        
+
         self.dataset = EEGDashDataset(cache_dir=self.DATA_DIR, dataset=dataset)
         self.dataset_name = dataset
+
+        if(file_filter):
+            recordings = [rec for rec in self.dataset.datasets if file_filter in rec.record["bids_relpath"]]
+            assert recordings, f"[ERROR] No recording of {dataset} has '{file_filter}' in its file path."
+            print(f"Keeping {len(recordings)}/{len(self.dataset.datasets)} recordings with '{file_filter}' in the file path.")
+            self.dataset = BaseConcatDataset(recordings)
 
         if(subject_limit != 0):
             self.dataset = BaseConcatDataset(self.dataset.datasets[:subject_limit])
@@ -518,6 +528,10 @@ class DatasetManager():
         return raw
 
     def __investigate_montage(self, raw: mne.io.Raw):
+        # "keep": positions already in the recording (read from the file or set by channels_treatment), checked by __verify_montage
+        if(self.montage == "keep"):
+            return raw
+
         if(self.montage):
             raw.set_montage(self.montage)
             return raw
@@ -601,6 +615,52 @@ class DatasetManager():
             raw.notch_filter(freqs=freqs, method="fir", fir_design="firwin")
         return raw
 
+    def __align_epochs_to_windows(self, raw:mne.io.Raw, window_size:int):
+        """
+        Epoched recordings: EEGDash loads them as one raw with the epochs joined end to end, and writes "Converted from N epochs" in info["description"].
+        Crops the end of each epoch to a multiple of window_size, so no window mixes two epochs, and stretches the epoch annotations
+        (duration 0, at each epoch start) up to the next annotation or the epoch end, so every window gets the label of its epoch.
+        Continuous recordings are returned as they are. Runs after resampling (window_size is in samples at the final sampling rate).
+        """
+        match = re.search(r"Converted from (\d+) epochs", raw.info.get("description") or "")
+        if(match is None):
+            return raw
+
+        sfreq = raw.info["sfreq"]
+        n_epochs = int(match.group(1))
+        # Epoch boundaries (proportional: resampling may round the total length by a sample)
+        bounds = np.round(np.arange(n_epochs + 1) * raw.n_times / n_epochs).astype(int)
+        epochs = list(zip(bounds[:-1], bounds[1:]))
+        kept = [(start, start + (stop - start) // window_size * window_size) for start, stop in epochs]
+        assert any(stop > start for start, stop in kept), f"Every epoch ({bounds[1]} samples) is shorter than one window ({window_size} samples)"
+
+        # Annotations: each one keeps its position inside its epoch (dropped if it is in the cropped end)
+        annotations = raw.annotations
+        onsets = np.round((annotations.onset - (raw.first_time if annotations.orig_time is not None else 0)) * sfreq).astype(int)
+        new_onsets, new_durations, new_descriptions = [], [], []
+        new_start = 0 # Start of the epoch in the cropped recording
+        for (start, stop), (_, kept_stop) in zip(epochs, kept):
+            inside = sorted((onset, i) for i, onset in enumerate(onsets) if start <= onset < kept_stop)
+            for j, (onset, i) in enumerate(inside):
+                # Duration 0 (an epoch marker): until the next annotation of the epoch or the epoch end
+                end = inside[j + 1][0] if j + 1 < len(inside) else kept_stop
+                duration = (end - onset) / sfreq if annotations.duration[i] == 0 else min(annotations.duration[i], (kept_stop - onset) / sfreq)
+                new_onsets.append((new_start + onset - start) / sfreq)
+                new_durations.append(duration)
+                new_descriptions.append(annotations.description[i])
+            new_start += kept_stop - start
+
+        dropped = sum(stop - kept_stop for (_, stop), (_, kept_stop) in zip(epochs, kept))
+        print(f"Epoched recording: {n_epochs} epochs of {bounds[1] - bounds[0]} samples. "
+              f"{dropped} samples cropped from the epoch ends (window size {window_size}), {len(new_onsets)} epoch annotations kept.")
+        if(dropped):
+            raw.load_data()
+            data = np.concatenate([raw.get_data()[:, start:stop] for start, stop in kept], axis=-1)
+            raw = mne.io.RawArray(data, raw.info, verbose="ERROR")
+        # orig_time=None: onsets from the first sample of the recording
+        raw.set_annotations(mne.Annotations(new_onsets, new_durations, new_descriptions, orig_time=None))
+        return raw
+
     def __record_dropped(self, output_dir:str, rec_key:str, info:dict):
         """
         Record a dropped recording (and the reason) in params.json, so it is skipped on the next run (overwrite=False).
@@ -625,9 +685,10 @@ class DatasetManager():
         return raw
 
     # Single underscore: name-mangled (__) methods can't be pickled and sent to joblib workers
-    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, value_multiplier, notch_freqs, record_idx):
+    def _process_single_subject(self, record, output_dir, channels_treatment, l_freq, h_freq, down_freq, bad_ch_tolerance, ransac, ica, window_size, ref_channels, overwrite, montage, treat_artifacts, value_multiplier, notch_freqs, record_idx, skip_cleaning=False):
         """
         Process a single subject, saving the result directly on disk to save RAM/VRAM
+        skip_cleaning: already preprocessed recordings. Skips bad channel detection, artifact removal (ICA), notch and band-pass filters.
         """
         sub_id = record.description.get('subject', 'unknown')
         self.__print_section(f"PROCESSING SUBJECT: {sub_id}")
@@ -685,8 +746,8 @@ class DatasetManager():
                              record_idx=record_idx,
                              group=group,
                              output_dir=output_dir, sub_dir="before", apply_on_array=False),
-                # 6. Detect bad channels
-                Preprocessor(self.__auto_detect_bads, ransac=ransac, apply_on_array=False),
+                # 6. Detect bad channels (skip_cleaning: only the bads already marked in the file)
+                *([] if skip_cleaning else [Preprocessor(self.__auto_detect_bads, ransac=ransac, apply_on_array=False)]),
                 ],
             )
 
@@ -708,17 +769,12 @@ class DatasetManager():
                 return False
             else:
                 # Stage 2: artifact removal, interpolation, reference, filtering and resampling
-                preprocess(
-                    single_ds,
-                    [
+                # skip_cleaning (already preprocessed): no ICA, notch or band-pass (steps 7, 11 and 12)
+                cleaning = [] if skip_cleaning else [
                     # 7. Eliminate EOG/ECG artifacts (ICA is fit on good channels only, so it runs before interpolation)
                     Preprocessor(self.__eliminate_artifacts, run=treat_artifacts, ica=ica, apply_on_array=False),
-                    # 8. Drop aux channels (non-eeg)
-                    Preprocessor(self.__drop_aux_channels, apply_on_array=False),
-                    # 9. Interpolate bad channels (rebuilt from the artifact-free neighbors)
-                    Preprocessor(self.__interpolate_bads_if_any, apply_on_array=False),
-                    # 10. Set A1/A2 reference
-                    Preprocessor(self.__define_reference, ref_channels=ref_channels, apply_on_array=False),
+                ]
+                filtering = [] if skip_cleaning else [
                     # 11. Notch filter (power line noise)
                     Preprocessor(self.__notch_filter, notch_freqs=notch_freqs, apply_on_array=False),
                     # 12. Band-pass filter
@@ -729,8 +785,22 @@ class DatasetManager():
                         method="fir",
                         fir_design="firwin",
                     ),
+                ]
+                preprocess(
+                    single_ds,
+                    [
+                    *cleaning,
+                    # 8. Drop aux channels (non-eeg)
+                    Preprocessor(self.__drop_aux_channels, apply_on_array=False),
+                    # 9. Interpolate bad channels (rebuilt from the artifact-free neighbors)
+                    Preprocessor(self.__interpolate_bads_if_any, apply_on_array=False),
+                    # 10. Set A1/A2 reference
+                    Preprocessor(self.__define_reference, ref_channels=ref_channels, apply_on_array=False),
+                    *filtering,
                     # 13. Downsampling
                     Preprocessor("resample", sfreq=down_freq),
+                    # 13b. Epoched recordings: crop each epoch to whole windows and label them (continuous recordings are unchanged)
+                    Preprocessor(self.__align_epochs_to_windows, window_size=window_size, apply_on_array=False),
                     # 14. PSD (After)
                     Preprocessor(self.__psd_gen,
                                  sub_id=sub_id,
@@ -795,12 +865,14 @@ class DatasetManager():
         n_jobs:int=4, 
         ref_channels:list[str]=[], 
         overwrite:bool=False,
-        montage:str="",
+        montage:str="", # Built-in MNE montage name, "" = auto-detect, "keep" = positions already in the recording (file or channels_treatment)
         treat_artifacts:bool=True,
         value_multiplier:float=1.0,
-        notch_freqs:list[float]=[]): # Power line frequencies removed by notch filter (e.g. [50, 60]). Empty = no notch
+        notch_freqs:list[float]=[], # Power line frequencies removed by notch filter (e.g. [50, 60]). Empty = no notch
+        skip_cleaning:bool=False): # Already preprocessed dataset: no bad channel detection, ICA, notch or band-pass (l_freq, h_freq, notch_freqs, ransac, ica, treat_artifacts are ignored)
         """
         Main function for optimized large dataset paralell processing.
+        Epoched recordings (joined by EEGDash) are windowed inside each epoch: see __align_epochs_to_windows.
         """
         os.makedirs(self.DATASETS_DIR / output_dir, exist_ok=True)
 
@@ -832,8 +904,11 @@ class DatasetManager():
             "montage": self.montage,
             "treat_artifacts":treat_artifacts,
             "value_multiplier":value_multiplier,
-            "notch_freqs":notch_freqs
+            "notch_freqs":notch_freqs,
+            "skip_cleaning":skip_cleaning
         }
+        # Default of the settings added after the first params.json files (an old params.json without them is not "different")
+        added_defaults = {"skip_cleaning": False}
 
         # Writes into json
         try:
@@ -845,6 +920,7 @@ class DatasetManager():
             # Compare the saved settings with the new ones (n_jobs only changes the speed, not the result)
             # json round trip, so the new settings have the same types as the saved ones (e.g. tuple -> list)
             new_params = json.loads(json.dumps(params))
+            loaded_params = {**added_defaults, **loaded_params}
             different = [key for key in new_params if key != "n_jobs" and loaded_params.get(key, "(not saved)") != new_params[key]]
             if(different):
                 self.__print_section("SAVED PARAMS.JSON vs NEW SETTINGS")
@@ -862,6 +938,7 @@ class DatasetManager():
                     l_freq, h_freq, down_freq, bad_ch_tolerance = saved["l_freq"], saved["h_freq"], saved["down_freq"], saved["bad_ch_tolerance"]
                     ransac, ica, window_size, ref_channels = saved["ransac"], saved["ica"], saved["window_size"], saved["ref_channels"]
                     treat_artifacts, value_multiplier, notch_freqs = saved["treat_artifacts"], saved["value_multiplier"], saved["notch_freqs"]
+                    skip_cleaning = saved["skip_cleaning"]
                     self.montage = saved["montage"]
                 else:
                     # Recordings processed with the old settings would be mixed with the new ones: reprocess everyone,
@@ -906,7 +983,8 @@ class DatasetManager():
                     treat_artifacts=treat_artifacts,
                     value_multiplier=value_multiplier,
                     notch_freqs=notch_freqs,
-                    record_idx=record_idx
+                    record_idx=record_idx,
+                    skip_cleaning=skip_cleaning
                 )
                 for record_idx, record in enumerate(dataset.datasets)
             )
