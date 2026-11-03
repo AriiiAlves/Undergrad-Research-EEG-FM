@@ -1,9 +1,13 @@
 import os
+import re
 import json
 import torch
 import sys
+import tempfile
 import multiprocessing
-from concurrent.futures import ProcessPoolExecutor
+from types import SimpleNamespace
+from xml.sax.saxutils import escape
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from fractions import Fraction
 from datetime import datetime
@@ -37,6 +41,7 @@ class BenchModel():
     And (optionally) set the input requirements: SFREQ, WINDOW_SIZE, V_TO_MODEL, select_channels().
     """
     BASE_DIR = "Model-Benchmarks" # Every model saves in BASE_DIR/MODEL_NAME
+    REPORTS_DIR = "Reports" # PDF reports of the UMAPs (report() and full_report())
     MODEL_NAME = "base"
     # Input requirements of the model (None = use the windows as they are)
     SFREQ = None        # Sampling rate expected by the model (windows are resampled if different)
@@ -156,6 +161,17 @@ class BenchModel():
         info[ds_name] = entry
         with open(path, "w") as f:
             json.dump(info, f, indent=4, default=str)
+
+    # -------------------------------- REPORT --------------------------------
+    @classmethod
+    def report(cls, out_dir=None):
+        """
+        PDF with every UMAP plot of this model (BASE_DIR/MODEL_NAME/umap_plots), separated by dataset and UMAP type.
+        Saved in out_dir (default: REPORTS_DIR)/UMAP-Report-<MODEL_NAME>.pdf. Returns its path.
+        Classmethod: works without loading windows/model (e.g. BenchLabram.report()). For every model, see full_report().
+        """
+        out_path = Path(out_dir or cls.REPORTS_DIR) / f"UMAP-Report-{cls.MODEL_NAME}.pdf"
+        return UMAPReport(cls.BASE_DIR, [cls.MODEL_NAME]).build(out_path, f"UMAP Report — {cls.MODEL_NAME}")
 
     def benchmark_config(self):
         """
@@ -971,3 +987,391 @@ class BenchLUNA(BenchModel):
         for block in model.blocks:
             latent = block(latent)
         return model.norm(latent).mean(dim=1)
+
+
+# -------------------------------- REPORTS --------------------------------
+def full_report(base_dir=BenchModel.BASE_DIR, out_dir=BenchModel.REPORTS_DIR):
+    """
+    PDF with every UMAP plot of every model found in base_dir (base_dir/<model>/umap_plots), separated by model, dataset and UMAP type.
+    Saved in out_dir/UMAP-Report.pdf. Returns its path. For only one model, see BenchModel.report().
+    """
+    models = sorted(d.name for d in Path(base_dir).iterdir() if d.is_dir()) if Path(base_dir).is_dir() else []
+    assert models, f"No model folder found in {base_dir}"
+    return UMAPReport(base_dir, models).build(Path(out_dir) / "UMAP-Report.pdf", "UMAP Report")
+
+class UMAPReport():
+    """
+    PDF report of the UMAP plots saved by BenchModel.umap(): model -> dataset -> UMAP type (mode, group_by, z-score).
+    Each dataset shows the status, warnings and errors of the model benchmark-info.json.
+    Used by full_report() (every model in BASE_DIR) and BenchModel.report() (one model). reportlab is only imported here.
+    """
+    # Folder of each UMAP type (inside umap_plots/<DS>/) and its title, in report order. Unknown folders go last
+    MODES = {
+        "avg": "Mean of the windows (avg)",
+        "median": "Median of the windows (median)",
+        "std": "Std of the windows (std)",
+        "windows": "One point by window (windows)",
+        "windows/subjects_events": "Events by subject (windows-detailed)",
+        "windows/recordings_events": "Events by recording (windows-detailed)",
+    }
+    GRID_MODES = ("windows/subjects_events", "windows/recordings_events") # Many small plots: 2 by row
+    # Width (px) of the JPEG copies put in the PDF (the 300 dpi PNGs would make it many times bigger)
+    IMAGE_WIDTH = 1500
+    GRID_IMAGE_WIDTH = 1000
+    # Plot name after "<MODEL>_<DS>_" (see BenchModel.__plot_name and __events_umap)
+    PLOT_NAME = re.compile(r"^(?P<mode>avg|median|std|windows)(?:_by_(?P<group_by>recording|subject))?_umap(?P<z_score>_with_z_score)?"
+                           r"(?:_(?P<kind>recording|subject)_(?P<id>.+?))?_label_(?P<label>.+)\.png$")
+    STATUS_COLORS = {"ok": "#2a7a2a", "error": "#b03030"}
+    MAX_MESSAGES = 10 # Warnings/errors shown by dataset (the rest is summarized)
+
+    def __init__(self, base_dir, models):
+        self.base_dir = Path(base_dir)
+        self.models = list(models)
+
+    def build(self, out_path, title):
+        """
+        Writes the PDF in out_path. Returns out_path.
+        """
+        from reportlab.lib.units import mm
+        from reportlab.platypus import NextPageTemplate, PageBreak, Paragraph, Spacer
+        from reportlab.platypus.tableofcontents import TableOfContents
+
+        out_path = Path(out_path)
+        plots, info = self.__collect()
+        datasets = sorted({ds for model in self.models for ds in [*plots[model], *info[model]]})
+        n_plots = sum(self.__count(plots[model]) for model in self.models)
+        print(f"[report] {n_plots} UMAP plots of {len(self.models)} model(s) and {len(datasets)} dataset(s) -> {out_path}")
+        s = self.__styles()
+
+        os.makedirs(out_path.parent, exist_ok=True)
+        with tempfile.TemporaryDirectory() as tmp_dir: # JPEG copies of the plots, read by reportlab while building
+            images = self.__shrink_all(plots, tmp_dir)
+
+            sources = f"{self.base_dir}/{self.models[0] if len(self.models) == 1 else '*'}/umap_plots"
+            story = [NextPageTemplate("body"), Spacer(1, 50 * mm),
+                     Paragraph(escape(title), s.title),
+                     Paragraph("EEG foundation-model latent spaces", s.subtitle),
+                     Spacer(1, 10 * mm),
+                     Paragraph(f"Generated {datetime.now():%Y-%m-%d %H:%M} from <font face='Courier'>{escape(sources)}</font>.<br/>"
+                               f"{n_plots} plots · {sum(1 for model in self.models if plots[model])} model(s) with plots · {len(datasets)} dataset(s).", s.cover),
+                     PageBreak()]
+            story += self.__overview(plots, info, datasets, s) + [PageBreak()]
+
+            toc = TableOfContents()
+            toc.levelStyles = [s.toc0, s.toc1]
+            story += [Paragraph("Contents", s.h1), toc, PageBreak()]
+
+            for model in self.models:
+                story += self.__model_section(model, plots[model], info[model], images, s)
+
+            print(f"[report] Building {out_path} (two passes, for the contents)...")
+            self.__document(out_path, title, s).multiBuild(story)
+        print(f"[report] Saved {out_path} ({os.path.getsize(out_path) / 1e6:.1f} MB)")
+        return out_path
+
+    # -------------------------------- PLOTS --------------------------------
+    def __collect(self):
+        """
+        Plots: {model: {dataset: {section: [plot, ...]}}}, section = (mode folder, group_by, z_score). Info: {model: benchmark-info.json}.
+        """
+        plots, info = {}, {}
+        for model in self.models:
+            model_dir = self.base_dir / model
+            info_path = model_dir / "benchmark-info.json"
+            info[model] = json.loads(info_path.read_text()) if info_path.exists() else {}
+            plots[model] = {}
+            plots_dir = model_dir / "umap_plots"
+            if not plots_dir.is_dir():
+                continue
+            for path in plots_dir.rglob("*.png"):
+                parts = path.relative_to(plots_dir).parts
+                if len(parts) < 3: # Expected: <DS>/<mode>/[subfolder/]<plot>.png
+                    continue
+                ds, folder = parts[0], "/".join(parts[1:-1])
+                plot = self.__parse(path.name, f"{model}_{ds}_") | {"path": path}
+                plots[model].setdefault(ds, {}).setdefault((folder, plot["group_by"], plot["z_score"]), []).append(plot)
+        return plots, info
+
+    def __parse(self, name, prefix):
+        """
+        Settings of a plot from its file name. Unknown names keep only the name as label.
+        """
+        match = self.PLOT_NAME.match(name[len(prefix):]) if name.startswith(prefix) else None
+        if match is None:
+            return {"group_by": None, "z_score": False, "kind": None, "id": None, "label": Path(name).stem}
+        return {"group_by": match["group_by"], "z_score": bool(match["z_score"]), "kind": match["kind"], "id": match["id"], "label": match["label"]}
+
+    @staticmethod
+    def __count(datasets):
+        return sum(len(files) for sections in datasets.values() for files in sections.values())
+
+    @staticmethod
+    def __natural(text):
+        """
+        Sort key that orders numbers by value (recording_2 before recording_10).
+        """
+        return [(0, int(part), "") if part.isdigit() else (1, 0, part) for part in re.split(r"(\d+)", text) if part]
+
+    def __section_order(self, section):
+        folder, group_by, z_score = section
+        modes = list(self.MODES)
+        return (modes.index(folder) if folder in modes else len(modes), folder, [None, "recording", "subject"].index(group_by), z_score)
+
+    def __section_title(self, section, n_plots):
+        folder, group_by, z_score = section
+        title = self.MODES.get(folder, folder)
+        if group_by:
+            title += f", by {group_by}"
+        if z_score:
+            title += ", z-score"
+        return f"{title} — {n_plots} plot(s)"
+
+    @staticmethod
+    def __caption(plot):
+        parts = [f"{plot['kind']} {escape(plot['id'])}"] if plot["kind"] else []
+        return " · ".join(parts + [f"color = <b>{escape(plot['label'])}</b>"])
+
+    def __shrink_all(self, plots, tmp_dir):
+        """
+        JPEG copy of every plot in tmp_dir. Returns {plot path: (copy path, (width, height))}.
+        """
+        jobs = []
+        for datasets in plots.values():
+            for sections in datasets.values():
+                for (folder, _, _), files in sections.items():
+                    width = self.GRID_IMAGE_WIDTH if folder in self.GRID_MODES else self.IMAGE_WIDTH
+                    for plot in files:
+                        jobs.append((plot["path"], Path(tmp_dir) / f"{len(jobs)}.jpg", width))
+        # PIL releases the GIL while decoding/resizing/encoding: threads are enough (and safe after torch/CUDA init)
+        with ThreadPoolExecutor(max_workers=min(32, os.cpu_count() or 1)) as pool:
+            sizes = list(tqdm(pool.map(lambda job: self.__shrink(*job), jobs), total=len(jobs), desc="[report] Shrinking plots", unit="plot"))
+        return {src: (dst, size) for (src, dst, _), size in zip(jobs, sizes)}
+
+    @staticmethod
+    def __shrink(src, dst, width):
+        from PIL import Image
+        with Image.open(src) as image:
+            image = image.convert("RGB")
+            if image.width > width:
+                image = image.resize((width, round(image.height * width / image.width)), Image.LANCZOS)
+            image.save(dst, "JPEG", quality=85, optimize=True)
+            return image.size
+
+    # -------------------------------- LAYOUT --------------------------------
+    @staticmethod
+    def __styles():
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_CENTER
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import mm
+
+        base = getSampleStyleSheet()
+        accent = colors.HexColor("#2b4c7e")
+        body = ParagraphStyle("body", parent=base["BodyText"], fontSize=9.5, leading=13)
+        small = ParagraphStyle("small", parent=body, fontSize=8, leading=10.5, textColor=colors.HexColor("#444444"))
+        caption = ParagraphStyle("caption", parent=small, alignment=TA_CENTER)
+        margin = 15 * mm
+        return SimpleNamespace(
+            page_size=A4, margin=margin, frame_width=A4[0] - 2 * margin, accent=accent,
+            title=ParagraphStyle("title", parent=base["Title"], fontSize=26, leading=32, textColor=accent, spaceAfter=6),
+            subtitle=ParagraphStyle("subtitle", parent=base["Heading2"], fontSize=15, leading=19, textColor=accent, alignment=TA_CENTER),
+            cover=ParagraphStyle("cover", parent=body, alignment=TA_CENTER, fontSize=11, leading=16),
+            h1=ParagraphStyle("h1", parent=base["Heading1"], fontSize=20, leading=24, textColor=accent, spaceAfter=8),
+            h2=ParagraphStyle("h2", parent=base["Heading2"], fontSize=15, leading=19, textColor=accent, spaceBefore=4, spaceAfter=6),
+            h3=ParagraphStyle("h3", parent=base["Heading3"], fontSize=12, leading=15, spaceBefore=8, spaceAfter=4),
+            body=body, small=small, caption=caption,
+            grid_caption=ParagraphStyle("grid_caption", parent=caption, fontSize=7, leading=9),
+            file_name=ParagraphStyle("file_name", parent=caption, fontName="Courier", fontSize=6.5, leading=8),
+            cell=ParagraphStyle("cell", parent=body, fontSize=8.5, leading=11),
+            toc0=ParagraphStyle("toc0", parent=body, fontName="Helvetica-Bold", fontSize=11, leading=15, spaceBefore=5),
+            toc1=ParagraphStyle("toc1", parent=body, fontSize=9.5, leading=12, leftIndent=12 * mm),
+        )
+
+    def __document(self, out_path, title, s):
+        """
+        A4 document: cover page + body pages with breadcrumb (current model / dataset) and page number. Headings go to the PDF outline and contents.
+        """
+        from reportlab.lib import colors
+        from reportlab.lib.units import mm
+        from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
+
+        class Document(BaseDocTemplate):
+            def __init__(self):
+                super().__init__(str(out_path), pagesize=s.page_size, leftMargin=s.margin, rightMargin=s.margin,
+                                 topMargin=s.margin, bottomMargin=s.margin, title=title)
+                page_w, page_h = s.page_size
+                self.addPageTemplates([
+                    PageTemplate("cover", [Frame(s.margin, s.margin, s.frame_width, page_h - 2 * s.margin)]),
+                    PageTemplate("body", [Frame(s.margin, s.margin, s.frame_width, page_h - 2 * s.margin - 6 * mm)], onPageEnd=self.decorate),
+                ])
+                self.crumb = ""
+
+            def beforeDocument(self):
+                self.crumb = "" # multiBuild builds twice
+
+            def decorate(self, canvas, doc):
+                page_w, page_h = s.page_size
+                canvas.saveState()
+                canvas.setFont("Helvetica", 8)
+                canvas.setFillColor(colors.grey)
+                canvas.drawString(s.margin, page_h - s.margin + 1 * mm, self.crumb)
+                canvas.drawRightString(page_w - s.margin, page_h - s.margin + 1 * mm, title)
+                canvas.drawCentredString(page_w / 2, s.margin - 7 * mm, str(doc.page))
+                canvas.restoreState()
+
+            def afterFlowable(self, flowable):
+                level = getattr(flowable, "outline_level", None)
+                if level is None:
+                    return
+                text, key = flowable.outline_text, flowable.outline_key
+                self.canv.bookmarkPage(key)
+                self.canv.addOutlineEntry(text, key, level=level, closed=level >= 1)
+                if level <= 1:
+                    self.notify("TOCEntry", (level, text, self.page, key))
+                    self.crumb = text.replace(" — ", "  /  ")
+
+        return Document()
+
+    @staticmethod
+    def __heading(text, style, level, key):
+        """
+        Paragraph that goes to the PDF outline (and to the contents, if level <= 1).
+        """
+        from reportlab.platypus import Paragraph
+        heading = Paragraph(escape(text), style)
+        heading.outline_level, heading.outline_text, heading.outline_key = level, text, key
+        return heading
+
+    # -------------------------------- SECTIONS --------------------------------
+    def __overview(self, plots, info, datasets, s):
+        """
+        Table with the number of plots and the status by model and dataset, and notes about missing plots or errors.
+        """
+        from reportlab.lib import colors
+        from reportlab.lib.units import mm
+        from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+
+        story = [Paragraph("Overview", s.h1),
+                 Paragraph("Number of UMAP plots by model and dataset. The status comes from each model <font face='Courier'>benchmark-info.json</font> "
+                           f"(<font color='{self.STATUS_COLORS['error']}'>error</font> = at least one step failed; “—” = no entry).", s.body),
+                 Spacer(1, 4 * mm)]
+        rows = [[Paragraph(f"<b>{escape(header)}</b>", s.cell) for header in ["Model", "Z-score", *datasets, "Total"]]]
+        for model in self.models:
+            z_scores = sorted({str(entry["config"].get("z_score")) for entry in info[model].values() if "config" in entry})
+            row = [Paragraph(f"<b>{escape(model)}</b>", s.cell), Paragraph(", ".join(z_scores) or "—", s.cell)]
+            for ds in datasets:
+                status = info[model].get(ds, {}).get("status", "—")
+                color = self.STATUS_COLORS.get(status, "#777777")
+                row.append(Paragraph(f"{self.__count({ds: plots[model].get(ds, {})})}<br/><font size=7 color='{color}'>{escape(status)}</font>", s.cell))
+            row.append(Paragraph(f"<b>{self.__count(plots[model])}</b>", s.cell))
+            rows.append(row)
+        ds_width = (s.frame_width - 60 * mm) / max(len(datasets), 1)
+        table = Table(rows, colWidths=[28 * mm, 16 * mm] + [ds_width] * len(datasets) + [16 * mm], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e6ecf5")),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#c0c8d4")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f7f9fc")]),
+        ]))
+        story += [table, Spacer(1, 6 * mm)]
+
+        notes = []
+        for model in self.models:
+            if not plots[model]:
+                skipped = [error for entry in info[model].values() for error in entry.get("errors", []) if error.startswith("Model skipped")]
+                notes.append(f"<b>{escape(model)}</b>: no UMAP plots. {escape(skipped[0] if skipped else '')}")
+            for ds, entry in info[model].items():
+                if entry.get("status") == "error" and plots[model].get(ds):
+                    notes.append(f"<b>{escape(model)} / {escape(ds)}</b>: plots exist, but the run reported errors: " + escape("; ".join(entry["errors"][:3])))
+            for ds in plots[model]:
+                if ds not in info[model]:
+                    notes.append(f"<b>{escape(model)} / {escape(ds)}</b>: plots exist, but there is no entry in benchmark-info.json (probably from an earlier run).")
+        if notes:
+            story.append(Paragraph("Notes", s.h2))
+            for note in notes:
+                story += [Paragraph("• " + note, s.body), Spacer(1, 1.5 * mm)]
+        return story
+
+    def __model_section(self, model, plots, info, images, s):
+        """
+        Model config, then one section by dataset (status, warnings, errors and its plots by UMAP type).
+        """
+        from reportlab.lib.units import mm
+        from reportlab.platypus import PageBreak, Paragraph, Spacer
+
+        story = [self.__heading(model, s.h1, 0, f"model_{model}")]
+        config = next((entry["config"] for entry in info.values() if "config" in entry), None)
+        if config:
+            channels = config.get("model_channels")
+            story.append(Paragraph(
+                f"sfreq = {config.get('sfreq') or 'any'} Hz · window = {config.get('window_size') or 'any'} samples · z-score = {config.get('z_score')} · "
+                f"V to model = x{config.get('v_to_model', 1):g} · requires positions = {config.get('requires_positions')} · "
+                f"{len(channels) if channels else 'any'} model channels", s.small))
+        datasets = sorted({*plots, *info})
+        with_plots = sum(1 for ds in datasets if plots.get(ds))
+        story += [Paragraph(f"{self.__count(plots)} plots · {with_plots} of {len(datasets)} dataset(s) with plots.", s.small), Spacer(1, 3 * mm)]
+
+        for i, ds in enumerate(datasets):
+            if i > 0:
+                story.append(PageBreak())
+            story.append(self.__heading(f"{model} — {ds}", s.h2, 1, f"dataset_{model}_{ds}"))
+            story += self.__status(info.get(ds), s)
+            sections = plots.get(ds, {})
+            if not sections:
+                story.append(Paragraph("No UMAP plots for this dataset.", s.body))
+            for j, section in enumerate(sorted(sections, key=self.__section_order)):
+                files = sorted(sections[section], key=lambda plot: (self.__natural(plot["id"] or ""), plot["label"]))
+                heading = self.__heading(self.__section_title(section, len(files)), s.h3, 2, f"section_{model}_{ds}_{j}")
+                story += self.__plots(heading, files, section[0] in self.GRID_MODES, images, s)
+        story.append(PageBreak())
+        return story
+
+    def __status(self, entry, s):
+        """
+        Status, warnings and errors of a dataset in benchmark-info.json (MAX_MESSAGES of each).
+        """
+        from reportlab.lib.units import mm
+        from reportlab.platypus import Paragraph, Spacer
+
+        if entry is None:
+            return [Paragraph("No entry in benchmark-info.json for this dataset.", s.small), Spacer(1, 2 * mm)]
+        status = entry.get("status", "—")
+        story = [Paragraph(f"Status: <font color='{self.STATUS_COLORS.get(status, '#777777')}'><b>{escape(status)}</b></font> · updated {escape(str(entry.get('updated')))}", s.small)]
+        error_color = self.STATUS_COLORS["error"]
+        for kind, messages, template in [("warnings", entry.get("warnings", []), "<b>Warning:</b> {}"),
+                                         ("errors", entry.get("errors", []), f"<font color='{error_color}'><b>Error:</b> {{}}</font>")]:
+            story += [Paragraph(template.format(escape(message)), s.small) for message in messages[:self.MAX_MESSAGES]]
+            if len(messages) > self.MAX_MESSAGES:
+                story.append(Paragraph(f"... and {len(messages) - self.MAX_MESSAGES} more {kind} (see benchmark-info.json)", s.small))
+        return story + [Spacer(1, 2 * mm)]
+
+    def __plots(self, heading, files, grid, images, s):
+        """
+        Plots of a UMAP type: one by row (with caption and file name) or, for grid, 2 by row. The heading stays with the first row.
+        """
+        from reportlab.lib.units import mm
+        from reportlab.platypus import Image, KeepTogether, Paragraph, Spacer, Table, TableStyle
+
+        story = []
+        if grid:
+            columns = 2
+            width = (s.frame_width - 6 * mm) / columns
+            cells = []
+            for plot in files:
+                path, (w, h) = images[plot["path"]]
+                cells.append([Image(str(path), width=width, height=width * h / w), Paragraph(self.__caption(plot), s.grid_caption)])
+            for i in range(0, len(cells), columns):
+                row = cells[i:i + columns]
+                table = Table([row + [""] * (columns - len(row))], colWidths=[width + 3 * mm] * columns)
+                table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                                           ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
+                story.append(KeepTogether([heading, table]) if i == 0 else table)
+        else:
+            width = 152 * mm
+            for i, plot in enumerate(files):
+                path, (w, h) = images[plot["path"]]
+                block = [Image(str(path), width=width, height=width * h / w), Paragraph(self.__caption(plot), s.caption),
+                         Paragraph(escape(plot["path"].name), s.file_name), Spacer(1, 4 * mm)]
+                story.append(KeepTogether(([heading] if i == 0 else []) + block))
+        return story
